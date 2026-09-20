@@ -25,13 +25,17 @@ int main()
             }while (codigos[qtdTitulos] < 0);
         }
         
-        for(int j = 1; j <= qtdTitulos-1; j++){
-            if(codigos[qtdTitulos] == codigos[j]){
-                do{
-                    printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");
-                    printf("\nDigite o codigo do novo livro: ");
-                    scanf("%d", &codigos[qtdTitulos]);
-                }while (codigos[qtdTitulos] == codigos[j]);
+        if(qtdTitulos != 0){
+            //printf("\nverifica repetição\n");
+            for(int j = 0; j <= qtdTitulos-1; j++){
+                //printf("\nj: %d - codigos: %d", j, codigos[j]);
+                if(codigos[qtdTitulos] == codigos[j]){
+                    do{
+                        printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");
+                        printf("\nDigite o codigo do novo livro: ");
+                        scanf("%d", &codigos[qtdTitulos]);
+                    }while (codigos[qtdTitulos] == codigos[j]);
+                }
             }
         }
         
@@ -54,26 +58,30 @@ int main()
         printf("\nLivro - codigo: %d possui %d exemplares em estoque.", codigos[y], estoques[y]);
     }
     
-    printf("\nO total de livros no sistema eh: %d", qtdExemplares);
+    printf("\n\nO total de livros no sistema eh: %d", qtdExemplares);
     
     
     do{
-        printf("\nDigite um codigo de livro para busca: ");
+        printf("\n\nDigite um codigo de livro para busca: ");
         scanf("%d", &codBusca);
     } while(codBusca < 0);
     
     for(int x = 0; x < 3; x++){
-        if(codBusca == codigos[x])
-            posBusca = x;
-            if(estoques[posBusca] == 0)
-                printf("\ntitulo temporariamente indisponivel");
-            else
-                printf("\ntitulo disponivel com %d em estoque", estoques[posBusca]);
+        if(codBusca == codigos[x]){
+            posBusca=x;
+        }
     }
     if(posBusca == -1){
         printf("\nNao possuimos este titulo no nosso acervo!");
+    } else{
+        if(estoques[posBusca] == 0 )
+            printf("titulo temporiamente indisponivel");
+        else{
+            printf("\ntitulo disponivel");
+            printf("\nQuantidade disponivel em estoque para a obra %d: %d", codigos[posBusca], estoques[posBusca]);
+        }
     }
-    
+
     
     
     
