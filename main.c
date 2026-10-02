@@ -32,12 +32,14 @@ int main()
     for(qtdTitulos = 0; qtdTitulos < MAX_TITULOS; qtdTitulos++){
         printf("\nDigite o codigo do novo livro: ");
         scanf("%d", &codigos[qtdTitulos]);
+        
         if(codigos[qtdTitulos] < 0){
             do{
                 printf("Codigo invalido. Digite um valor maior ou igual a zero.\n");
                 printf("Digite o codigo do novo livro: ");
                 scanf("%d", &codigos[qtdTitulos]);
             }while (codigos[qtdTitulos] < 0);
+            
         }
         
         if(qtdTitulos != 0){
@@ -68,11 +70,14 @@ int main()
         
         
         qtdExemplares += estoques[qtdTitulos];
+        
     }
-    
+      
     printf("\n==================================================\n==================================================\n");
     
-    while (getchar() != '\n');
+    //buffer. limpeza do \n
+    while ((codigos[qtdTitulos] = fgetc(stdin)) != '\n' && codigos[qtdTitulos] != EOF);
+      
     for (int i = 0; i <MAX_TITULOS; i++){
         //limpeza de buffer
         
