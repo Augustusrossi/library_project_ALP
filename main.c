@@ -23,11 +23,8 @@ int disponibilidadeTitulo( int qtdEstoque){
 int calcularQtdExemplares(Livro livros[], int qtdTitulos){
     int qtdExemplares = 0;
     
-
-    
     for(int i = 0; i < qtdTitulos; i++){
         qtdExemplares += livros[i].estoque;
-        printf("---------------------\n%d\n------------------", qtdExemplares);
     }
     
     return qtdExemplares;
@@ -65,12 +62,12 @@ int cadastrarTitulo(Livro livros[], int qtdTitulos){
             }
         }
         
-        if(livros[i].codigo < 0){
+        if(livros[i].codigo <= 0){
             do{
                 printf("Codigo invalido. Digite um valor maior ou igual a zero.\n");
                 printf("Digite o codigo do novo livro: ");
                 scanf("%d", &livros[i].codigo);
-            }while (livros[i].codigo < 0);
+            }while (livros[i].codigo <= 0);
             
         }
         while ((caractere = getchar()) != '\n' && caractere != EOF);
@@ -100,7 +97,7 @@ int cadastrarTitulo(Livro livros[], int qtdTitulos){
                 printf("Sem descricao.\n");
                 printf("\nDigite algo na descricao: ");
                 fgets(livros[i].descricao, TAM_TEXTO, stdin);
-            }while (livros[i].descricao == "");
+            }while (livros[i].descricao[0] == '\n' || livros[i].descricao[0] == '\0');
         }
         
     }
@@ -117,10 +114,11 @@ void listarTitulos(Livro livros[], int qtdTitulos, int posBusca){
     if(posBusca != -1){
         
             int disponivel = disponibilidadeTitulo(livros[posBusca].estoque);
+            
             printf("\n==============");
             printf("\nCodigo: %d", livros[posBusca].codigo);
-            if(livros[posBusca].estoque >= 1) printf("\nTitúlo disponível - Estoque: %d", livros[posBusca].estoque);
-            else printf("\nTitúlo indisponível - Estoque: %d", livros[posBusca].estoque);
+            if(disponivel >= 1) printf("\nTitúlo disponível - Estoque: %d", disponivel);
+            else printf("\nTitúlo indisponível - Estoque: %d", disponivel);
             
             printf("\nDescricao: %s", livros[posBusca].descricao);
             printf("==============\n");
@@ -160,9 +158,8 @@ int buscarTitulo(Livro livros[], int qtdTitulos, int codigoBuscado){
 
 //funções de usuário
 
-void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[]){
+void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[], int qtdTitulos){
     int caractere;
-    
     
     for (int i = 0; i<qtdUsers; i++){
         int posBusca = -1;
@@ -193,12 +190,12 @@ void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[]){
             }
         }
         
-        if(user[i].codigo < 0){
+        if(user[i].codigo <= 0){
             do{
                 printf("Codigo invalido. Digite um valor maior ou igual a zero.\n");
                 printf("Digite o codigo do Usuario: ");
                 scanf("%d", &user[i].codigo);
-            }while (user[i].codigo < 0);
+            }while (user[i].codigo <= 0);
             
         }
         
@@ -209,7 +206,7 @@ void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[]){
         scanf("%d", &user[i].codigoLivroEmprestado);*/
         
         do{
-            listarTitulos(livros, MAX_TITULOS, posBusca);
+            listarTitulos(livros, qtdTitulos, posBusca);
             printf("Digite o codigo do livro que voce deseja emprestar: ");
             scanf("%d", &user[i].codigoLivroEmprestado);
             
@@ -221,7 +218,7 @@ void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[]){
                 }while (user[i].codigoLivroEmprestado < 0);
             }
             
-            posBusca = buscarTitulo(livros, MAX_TITULOS, user[i].codigoLivroEmprestado);
+            posBusca = buscarTitulo(livros, qtdTitulos, user[i].codigoLivroEmprestado);
             
         }while(posBusca == -1);
 
@@ -279,15 +276,18 @@ void emprestarLivro(Livro livros[], Usuario user[], int qtdUsers, int qtdTitulos
 
 
 int main(){
-    int qtdExemplares = 0;
+    int qtdExemplares = 0, qtdTitulos = 0;
     int codBusca;
     int posBusca;
     Livro livros[MAX_TITULOS];
     Usuario user[MAX_USERS];
     
-    qtdExemplares = cadastrarTitulo(livros, MAX_TITULOS);
+    qtdTitulos = cadastrarTitulo(livros, MAX_TITULOS);
     
-    cadastrarUser(user, MAX_USERS, livros);
+    qtdExemplares = calcularQtdExemplares(livros, qtdTitulos);
+    printf("Total de exemplares: %d\n", qtdExemplares);
+    
+    cadastrarUser(user, MAX_USERS, livros, qtdTitulos);
     
     emprestarLivro(livros, user, MAX_USERS, MAX_TITULOS);
     
