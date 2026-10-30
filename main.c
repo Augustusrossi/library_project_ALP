@@ -3,30 +3,28 @@
 #define MAX_USERS 3
 #define TAM_TEXTO 120
 
-typedef struct
-{
+typedef struct{
     int codigo;
     char descricao[TAM_TEXTO];
     int estoque;
 } Livro;
 
-typedef struct
-{
+typedef struct{
     int codigo;
     char dados[TAM_TEXTO];
     int codigoLivroEmprestado;
 } Usuario;
 
-int disponibilidadeTitulo(int qtdEstoque)
-{
+
+
+int disponibilidadeTitulo(int qtdEstoque){
     if (qtdEstoque >= 1)
         return 1;
     else
         return 0;
 }
 
-int calcularQtdExemplares(Livro livros[], int qtdTitulos)
-{
+int calcularQtdExemplares(Livro livros[], int qtdTitulos){
     int qtdExemplares = 0;
 
     for (int i = 0; i < qtdTitulos; i++)
@@ -37,8 +35,7 @@ int calcularQtdExemplares(Livro livros[], int qtdTitulos)
     return qtdExemplares;
 }
 
-int cadastrarTitulo(Livro livros[], int qtdTitulos)
-{
+int cadastrarTitulo(Livro livros[], int qtdTitulos){
     int caractere;
     // cadastrar codigo e estoque
     for (int i = 0; i < qtdTitulos; i++) {
@@ -123,8 +120,7 @@ int cadastrarTitulo(Livro livros[], int qtdTitulos)
     return qtdExemplares;
 }
 
-void listarTitulos(Livro livros[], int qtdTitulos, int posBusca)
-{
+void listarTitulos(Livro livros[], int qtdTitulos, int posBusca){
     // for com tamnaho max sendo o max de valores nos arrays e printf no conteudo do indice
     // for(int i = 0; i < qtdTitulos; i++){
 
@@ -163,8 +159,7 @@ void listarTitulos(Livro livros[], int qtdTitulos, int posBusca)
     //}
 }
 
-int buscarTitulo(Livro livros[], int qtdTitulos, int codigoBuscado)
-{
+int buscarTitulo(Livro livros[], int qtdTitulos, int codigoBuscado){
     int posBusca = -1;
 
     for (int i = 0; i < qtdTitulos; i++)
@@ -188,8 +183,7 @@ int buscarTitulo(Livro livros[], int qtdTitulos, int codigoBuscado)
 
 // funções de usuário
 
-void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[], int qtdTitulos)
-{
+void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[], int qtdTitulos){
     int caractere;
 
     for (int i = 0; i < qtdUsers; i++)
@@ -285,8 +279,7 @@ void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[], int qtdTitulos)
     }
 }
 
-void emprestarLivro(Livro livros[], Usuario user[], int qtdUsers, int qtdTitulos)
-{
+void emprestarLivro(Livro livros[], Usuario user[], int qtdUsers, int qtdTitulos){
 
     for (int i = 0; i < qtdUsers; i++)
     {
@@ -324,8 +317,7 @@ void emprestarLivro(Livro livros[], Usuario user[], int qtdUsers, int qtdTitulos
     }
 }
 
-int main()
-{
+int main(){
     int qtdExemplares = 0, qtdTitulos = 0;
     int codBusca;
     int posBusca;
@@ -341,43 +333,15 @@ int main()
 
     emprestarLivro(livros, user, MAX_USERS, MAX_TITULOS);
 
-    // escolha pessoal
-    /*usar uma variavel descrição e cada uma das outras descrições servir de componente da descrição maior, por exemplo
-        descricao 1: O Hobbit (nome)
-        descricao 2: J. R. R. Tolkien (autor)
-        descricao 3: 1937 (anoPublicacao)
-        descricao 4: Fantasia (genero)
-        concatencao: descricao1 + ";" + descricao2 + ";" + descricao3 + ";" + descricao4
-        descricaoFinal: "O Hobbit; J. R. R. Tolkien; 1937; Fantasia”
+    
 
+    void alterarEstoque( Livro *livro, int valor);
 
-    printf("\n\nO total de livros no sistema eh: %d", qtdExemplares);
+    void registrarEmprestimo( Usuario *usuario, int codigoLivro);
 
-    printf("\n==================================================");
+    void encerrarEmprestimo( Usuario *usuario );
 
-    for(int i = 0; i < MAX_TITULOS; i++){
-        printf("\n%d", livros[i].codigo);
-    }
-
-    printf("\n==================================================\n==================================================\n");
-    */
-
-    /*
-    do{
-        printf("\n\nDigite um codigo de livro para busca: ");
-        scanf("%d", &codBusca);
-    } while(codBusca < 0);
-
-    do{
-        posBusca = buscarTitulo(livros, MAX_TITULOS, codBusca);
-        listarTitulos(livros, MAX_TITULOS, posBusca);
-    }while(posBusca == -1);
-
-
-    printf("%d", posBusca);
-
-    listarTitulos(livros, MAX_TITULOS, posBusca);
-    */
+    
 }
 
 /*
