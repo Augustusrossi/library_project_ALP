@@ -1,0 +1,139 @@
+void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[], int qtdTitulos){
+    int caractere;
+
+    for (int i = 0; i < qtdUsers; i++)
+    {
+        int posBusca = -1;
+        if (i == 0)
+        {
+            printf("\nDigite o codigo do Usuario: ");
+            scanf("%d", &user[i].codigo);
+        }
+
+        if (i != 0)
+        {
+            //  printf("\n2===== %d =====\n", codigos[i]);
+            printf("\nverifica repetição\n");
+
+            printf("\nDigite o codigo do Usuario: ");
+            scanf("%d", &user[i].codigo);
+            for (int j = 0; j <= i - 1; j++)
+            {
+
+                //    printf("\n3===== %d =====\n", codigos[i]);
+                //  printf("\nj: %d - codigos: %d\ncodigo em qtdTitulos: %d\nqtdTitulos: %d\n", j, codigos[j], codigos[i], i);
+
+                if (user[i].codigo == user[j].codigo)
+                {
+                    //    printf("\n4===== %d =====\n", codigos[i]);
+                    do
+                    {
+                        printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");
+                        printf("\nDigite o codigo do Usuario: ");
+                        scanf("%d", &user[i].codigo);
+                    } while (user[i].codigo == user[j].codigo);
+                }
+            }
+        }
+
+        if (user[i].codigo <= 0)
+        {
+            do
+            {
+                printf("Codigo invalido. Digite um valor maior ou igual a zero.\n");
+                printf("Digite o codigo do Usuario: ");
+                scanf("%d", &user[i].codigo);
+            } while (user[i].codigo <= 0);
+        }
+
+        while ((caractere = getchar()) != '\n' && caractere != EOF)
+            ;
+
+        // quantidade em esotque
+        /*printf("Digite o codigo do livro que voce deseja emprestar: ");
+        scanf("%d", &user[i].codigoLivroEmprestado);*/
+
+        do
+        {
+            listarTitulos(livros, qtdTitulos, posBusca);
+            printf("Digite o codigo do livro que voce deseja emprestar: ");
+            scanf("%d", &user[i].codigoLivroEmprestado);
+
+            if (user[i].codigoLivroEmprestado < 0)
+            {
+                do
+                {
+                    printf("Codigo invalido. Digite um codigo existente.\n");
+                    printf("\nDigite o codigo do livro que voce deseja emprestar ");
+                    scanf("%d", &user[i].codigoLivroEmprestado);
+                } while (user[i].codigoLivroEmprestado < 0);
+            }
+
+            posBusca = buscarTitulo(livros, qtdTitulos, user[i].codigoLivroEmprestado);
+
+        } while (posBusca == -1);
+
+        while ((caractere = getchar()) != '\n' && caractere != EOF)
+            ;
+
+        printf("\nComplete os seguintes campos, separando-os por (;) correspondentes aos dados do usuario: %d\n", user[i].codigo);
+        printf("nome: \nidade: \nCPF: \ngenero: \n");
+
+        printf("Dados do usuario%d: ", i);
+        fgets(user[i].dados, TAM_TEXTO, stdin);
+
+        if (user[i].dados[0] == '\n' || user[i].dados[0] == '\0')
+        {
+            do
+            {
+                printf("Sem informacoes.\n");
+                printf("\nPreencha os dados do usuario: ");
+                fgets(user[i].dados, TAM_TEXTO, stdin);
+            } while (user[i].dados == "");
+        }
+    }
+}
+
+void emprestarLivro(Livro livros[], Usuario user[], int qtdUsers, int qtdTitulos){
+
+    for (int i = 0; i < qtdUsers; i++)
+    {
+        int qtdEmprestimo = 0, emprestimo = 0;
+        do
+        {
+            printf("\n === Digite uma quantidade de exemplares a ser retirado: ===\n");
+            scanf("%d", &qtdEmprestimo);
+
+            if (qtdEmprestimo < 0)
+            {
+                printf("\n=== Quantidade invalida para emprestimo ===");
+                printf("\n=== Digite uma quantidade positiva ===");
+            }
+            else if (qtdEmprestimo > livros[buscarTitulo(livros, qtdTitulos, user[i].codigoLivroEmprestado)].estoque)
+            {
+                printf("\n=== Quantidade invalida para emprestimo ===");
+                printf("\n=== Quantidade superior a existente no estoque ===");
+                printf("\n=== cod: %d ===", livros[buscarTitulo(livros, qtdTitulos, user[i].codigoLivroEmprestado)].codigo);
+                printf("\n=== estoque: %d ===", livros[buscarTitulo(livros, qtdTitulos, user[i].codigoLivroEmprestado)].estoque);
+            }
+            else
+            {
+                emprestimo = 0;
+            }
+        } while (qtdEmprestimo < 0 || qtdEmprestimo > livros[buscarTitulo(livros, qtdTitulos, user[i].codigoLivroEmprestado)].estoque);
+
+        if (emprestimo == 0)
+        {
+            livros[buscarTitulo(livros, qtdTitulos, user[i].codigoLivroEmprestado)].estoque -= qtdEmprestimo;
+            printf("\n=== Emprestimo realizado ===");
+            printf("\n=== Estoque atualizado: %d ===", livros[buscarTitulo(livros, qtdTitulos, user[i].codigoLivroEmprestado)].estoque);
+        }
+        printf("\n=== estoque: %d ===", livros[buscarTitulo(livros, qtdTitulos, user[i].codigoLivroEmprestado)].estoque);
+    }
+}
+
+
+int main(){
+        //emprestarLivro(livros, user, MAX_USERS, MAX_TITULOS);
+
+}
