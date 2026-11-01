@@ -26,9 +26,9 @@ int disponibilidadeTitulo(int qtdEstoque){
 }
 
 int calcularQtdExemplares(Livro livros[], int qtdTitulos){
-    int qtdExemplares = 0;
+    int qtdExemplares = 0, i;
 
-    for (int i = 0; i < qtdTitulos; i++)
+    for (i = 0; i < qtdTitulos; i++)
     {
         qtdExemplares += livros[i].estoque;
     }
@@ -37,9 +37,9 @@ int calcularQtdExemplares(Livro livros[], int qtdTitulos){
 }
 
 void cadastrarTitulo(Livro livros[], int qtdTitulos){
-    int caractere;
+    int caractere, i, j;
     // cadastrar codigo e estoque
-    for (int i = 0; i < qtdTitulos; i++) {
+    for ( i = 0; i < qtdTitulos; i++) {
         if (i == 0) {
             do{
                 printf("\nDigite o codigo do novo livro: ");
@@ -56,7 +56,8 @@ void cadastrarTitulo(Livro livros[], int qtdTitulos){
 
             printf("\nDigite o codigo do novo livro: ");
             scanf("%d", &livros[i].codigo);
-            for (int j = 0; j <= i - 1; j++){
+        
+            for ( j = 0; j <= i - 1; j++){
 
                 if (livros[i].codigo == livros[j].codigo){
                     do{
@@ -110,47 +111,51 @@ void cadastrarTitulo(Livro livros[], int qtdTitulos){
 }
 
 void listarTitulos(Livro livros[], int qtdTitulos, int posBusca){
-    // for com tamnaho max sendo o max de valores nos arrays e printf no conteudo do indice
-    // for(int i = 0; i < qtdTitulos; i++){
+    int i;
 
     if (posBusca != -1) {
+        printf("\n+----------------------------------------+");
+        printf("\n|          DETALHES DO LIVRO             |");
+        printf("\n+----------------------------------------+");
 
         int disponivel = disponibilidadeTitulo(livros[posBusca].estoque);
 
-        printf("\n==============");
-        printf("\nCodigo: %d", livros[posBusca].codigo);
-        if (disponivel >= 1)
-            printf("\nTitúlo disponível - Estoque: %d", disponivel);
+        printf("\n| Codigo   : %-27d |", livros[posBusca].codigo);
+        if (disponivel)
+            printf("\n| Status   : Disponivel (%d em estoque)  |", livros[posBusca].estoque);
         else
-            printf("\nTitúlo indisponível - Estoque: %d", disponivel);
+            printf("\n| Status   : Indisponivel - Estoque: %d |", livros[posBusca].estoque);
 
-        printf("\nDescricao: %s", livros[posBusca].descricao);
-        printf("==============\n");
+        printf("\n| Descricao: %-27s |", livros[posBusca].descricao);
+        printf("\n+----------------------------------------+\n");
     }
     else
     {
-        printf("\n======= LIVROS NO ACERVO =======");
-        for (int i = 0; i < qtdTitulos; i++)
+        printf("\n==========================================");
+        printf("\n          CATÁLOGO DE LIVROS              ");
+        printf("\n==========================================");
+        for (i = 0; i < qtdTitulos; i++)
         {
-            printf("\n==============\n");
-            int disponivel = disponibilidadeTitulo(livros[i].estoque);
-            printf("\nCodigo: %d", livros[i].codigo);
-            if (livros[i].estoque >= 1)
-                printf("\nTitúlo disponível - Estoque: %d", livros[i].estoque);
-            else
-                printf("\nTitúlo indisponível - Estoque: %d", livros[i].estoque);
 
-            printf("\nDescricao: %s", livros[i].descricao);
+            printf("\n+----------------------------------------+");
+            int disponivel = disponibilidadeTitulo(livros[i].estoque);
+            printf("\n| Codigo   : %-27d |", livros[i].codigo);
+            if (livros[i].estoque >= 1)
+                printf("\n| Status   : Disponivel (%d em estoque)  |", livros[i].estoque);
+            else
+                printf("\nTitulo indisponivel - Estoque: %d", livros[i].estoque);
+
+            printf("\n| Descricao: %-27s |", livros[i].descricao);
+            printf("\n+----------------------------------------+");
         }
     }
 
-    //}
 }
 
 int buscarTitulo(Livro livros[], int qtdTitulos, int codigoBuscado){
-    int posBusca = -1;
+    int posBusca = -1, i;
 
-    for (int i = 0; i < qtdTitulos; i++)
+    for (i = 0; i < qtdTitulos; i++)
     {
         if (codigoBuscado == livros[i].codigo)
         {
@@ -169,12 +174,12 @@ int buscarTitulo(Livro livros[], int qtdTitulos, int codigoBuscado){
     }
 }
 
-// funções de usuário
+// funcões de usuário
 
 void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[], int qtdTitulos){
-    int caractere;
+    int caractere, i, j;
 
-    for (int i = 0; i < qtdUsers; i++){
+    for (i = 0; i < qtdUsers; i++){
         user[i].codigoLivroEmprestado = -1;
         int posBusca = -1;
         if (i == 0){
@@ -184,11 +189,11 @@ void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[], int qtdTitulos)
 
         if (i != 0){
             //  printf("\n2===== %d =====\n", codigos[i]);
-            printf("\nverifica repetição\n");
+            printf("\nverifica repeticao\n");
 
             printf("\nDigite o codigo do Usuario: ");
             scanf("%d", &user[i].codigo);
-            for (int j = 0; j <= i - 1; j++) {
+            for (j = 0; j <= i - 1; j++) {
 
                 //    printf("\n3===== %d =====\n", codigos[i]);
                 //  printf("\nj: %d - codigos: %d\ncodigo em qtdTitulos: %d\nqtdTitulos: %d\n", j, codigos[j], codigos[i], i);
@@ -227,7 +232,7 @@ void cadastrarUser(Usuario user[], int qtdUsers, Livro livros[], int qtdTitulos)
                 fgets(user[i].dados, TAM_TEXTO, stdin);
             } while  (user[i].dados[0] == '\n' || user[i].dados[0] == '\0');
         }
-        // inicialização 
+        // inicializacao 
         
     }
 }
@@ -237,29 +242,34 @@ void alterarEstoque( Livro *livro, int valor){
 }
 
 void listarUsers(Usuario user[], int qtdUsers, int posBusca){
+    int i;
 
     if (posBusca != -1){
-        printf("\n==============");
-        printf("\nCodigo: %d", user[posBusca].codigo);
-        printf("\nDados: %s", user[posBusca].dados);
+        printf("\n+----------------------------------------+");
+        printf("\n|          DETALHES DO USUÁRIO           |");
+        printf("\n+----------------------------------------+");
+        printf("\n| Codigo : %-29d |", user[posBusca].codigo);
+        printf("\n| Dados  : %-29s |", user[posBusca].dados);
         
-        if (user[posBusca].codigoLivroEmprestado == -1 ) printf("\nUsuário sem empréstimo");
-        else printf("\nUsuário com empréstimo feito - código livro emprestado: %d", user[posBusca].codigoLivroEmprestado);
+        if (user[posBusca].codigoLivroEmprestado == -1 ) printf("\n| Emprestimo: Nenhum livro em posse      |");
+        else printf("\n| Emprestimo: Livro emprestado - Codigo: %-15d |", user[posBusca].codigoLivroEmprestado);
 
-        printf("\n==============\n");
+        printf("\n+----------------------------------------+\n");
     }
     else{
-        printf("\n======= Usuários =======");
-        for (int i = 0; i < qtdUsers; i++){
+        printf("\n==========================================");
+        printf("\n          LISTAGEM USUÁRIOS            ");
+        printf("\n==========================================");
+        for (i = 0; i < qtdUsers; i++){
 
-            printf("\n==============");
-            printf("\nCodigo: %d", user[i].codigo);
-            printf("\nDados: %s", user[i].dados);
+            printf("\n+----------------------------------------+");
+            printf("\n| Codigo : %-29d |", user[i].codigo);
+            printf("\n| Dados  : %-29s |", user[i].dados);
 
-            if ( user[i].codigoLivroEmprestado == -1) printf("\nUsuário sem empréstimo");
-            else printf("\nUsuário com empréstimo feito - código livro emprestado: %d", user[i].codigoLivroEmprestado);
+            if ( user[i].codigoLivroEmprestado == -1) printf("\n| Usuário sem emprestimo      |");
+            else printf("\n| Emprestimo: Livro Cod. %-15d |", user[i].codigoLivroEmprestado);
             
-            printf("\n==============\n");
+            printf("\n+----------------------------------------+\n");
         }
     }
 
@@ -268,24 +278,32 @@ void listarUsers(Usuario user[], int qtdUsers, int posBusca){
 
 
 void registrarEmprestimo( Usuario *user, int codigoLivro, Livro *livro){
-    if (livro->codigo > 0){
-        user->codigoLivroEmprestado = codigoLivro;
-        livro->estoque--;
-    } else {
-        printf("\nNão é possível efetuar o empréstimo pois não há exemplares em estoque");
+    if (user->codigoLivroEmprestado != -1) {
+        printf("Usuario ja possui um livro emprestado.\n");
+        return;
+    }else{
+        if (livro->estoque > 0){
+            user->codigoLivroEmprestado = codigoLivro;
+            livro->estoque = livro->estoque - 1;
+        } else {
+            printf("\nNao e possivel efetuar o emprestimo pois nao há exemplares em estoque");
+        }
     }
     
 }
 
 void encerrarEmprestimo( Usuario *user, Livro *livro){
-    user->codigoLivroEmprestado = -1;
-    livro->estoque++;
+    if (user->codigoLivroEmprestado == -1) {
+        printf("Usuario nao possui livro emprestado.\n");
+        return;
+    } else{
+        user->codigoLivroEmprestado = -1;
+        livro->estoque = livro->estoque + 1;
+    }
 }
 
 
 int main(){
-    // Define a página de código do console para UTF-8 (65001)
-    setlocale(LC_ALL, "Portuguese"); 
 
     int qtdExemplares = 0, qtdTitulos = 0;
     int codBusca;
@@ -304,34 +322,30 @@ int main(){
     listarTitulos(livros, MAX_TITULOS, -1);
 
 
-    //PASSANDO O ENDEREÇO A LISTA DE LIVROS E A POSIÇÃO DO LIVRO Q QUERO ALTERAR
-    printf("\n=== ALTERAR O ESTOQUE ===");
+    //PASSANDO O ENDEREcO A LISTA DE LIVROS E A POSIcaO DO LIVRO Q QUERO ALTERAR
     alterarEstoque(&livros[0], 1);
+
+    printf("Alterando estoque do livro com codigo %d para %d\n", livros[0].codigo, livros[0].estoque);
+    listarTitulos(livros, MAX_TITULOS, 0);
+    printf("\n--------------------------------\n");
+    alterarEstoque(&livros[0], 12222);
+
+    printf("Alterando estoque do livro com codigo %d para %d\n", livros[0].codigo, livros[0].estoque);
     listarTitulos(livros, MAX_TITULOS, 0);
 
-    //PASSANDO O ENDEREÇO A LISTA DE USUÁRIOS E A POSIÇÃO DO LIVRO Q FOI EMPRESTADO
-    printf("\n=== REGISTRAR EMPRESTIMO ===\n");
+    //PASSANDO O ENDEREcO A LISTA DE USUÁRIOS E A POSIcaO DO LIVRO Q FOI EMPRESTADO
+    registrarEmprestimo(&user[1], 0, &livros[2]);
 
-
-    registrarEmprestimo(&user[1], 0, &livros[0]);
-    printf("\n\n===================\n");
+    printf("Usuário com codigo %d emprestou o livro com codigo %d\n", user[1].codigo, livros[2].codigo);
     listarUsers(user, MAX_USERS, 1);
-    printf("\n===================");
 
-    printf("\n\n===================\n");
-    listarTitulos(livros, MAX_TITULOS, 0); 
-    printf("\n===================\n\n");
+    printf("Livro com codigo %d agora tem estoque de %d\n", livros[2].codigo, livros[2].estoque);
+    listarTitulos(livros, MAX_TITULOS, 2); 
     
-    //PASSANDO O ENDEREÇO A LISTA DE USUÁRIOS 
+    //PASSANDO O ENDEREcO A LISTA DE USUÁRIOS 
     printf("\n=== Finalizar emprestimo ===");
-    //encerrarEmprestimo(&user[1], &livros[0]);
+    encerrarEmprestimo(&user[1], &livros[0]);
+    listarUsers(user, MAX_USERS, 1);
 
     
 }
-
-/*
-    IDEIAS:
-    fazer uma struct de usuario que guarda um array de quantidades e um array de codigo de livros emprestado, com os indices correspondentes entre eles. E também funções de correção e alteração desses campos
-
-
-*/
