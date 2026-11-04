@@ -17,7 +17,7 @@ typedef struct{
 } Usuario;
 
 
-void cadastrarTitulo(Livro *livros, int posicao);
+void cadastrarTitulo(Livro *livros, Livro *inicioLivros, int posicao);
 void listarTitulos(Livro *livros, int qtdTitulos, int posBusca);
 int buscarTitulo(Livro *livros, int qtdTitulos, int codigoBuscado);
 int disponibilidadeTitulo(int qtdEstoque);
@@ -30,11 +30,9 @@ int disponibilidadeTitulo(int qtdEstoque){
         return 0;
 }
 
-
-
-void cadastrarTitulo(Livro *livros, int posicao){
+void cadastrarTitulo(Livro *pLivro, Livro *inicioLivros, int posicao){
     //ponteiro específico
-    Livro *pLivro = &livros[posicao];
+    //Livro *pLivro = livros;
 
     int apenas_numeros = 1;
     int busca_repeticao = -1;  
@@ -56,7 +54,7 @@ void cadastrarTitulo(Livro *livros, int posicao){
     if (posicao != 0) {
         //printf("\nverifica repeticao\n");
 
-        busca_repeticao = buscarTitulo(livros, posicao, pLivro->codigo);
+        busca_repeticao = buscarTitulo(inicioLivros, posicao, pLivro->codigo);
         if (busca_repeticao != -1) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");    
 
         while (busca_repeticao != -1){
@@ -75,7 +73,7 @@ void cadastrarTitulo(Livro *livros, int posicao){
                 }
             }while (pLivro->codigo <= 0 || apenas_numeros == 1);
             
-            busca_repeticao = buscarTitulo(livros, posicao, pLivro->codigo);
+            busca_repeticao = buscarTitulo(inicioLivros, posicao, pLivro->codigo);
             if (busca_repeticao != -1) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");       
             
         } ;
@@ -113,9 +111,10 @@ void cadastrarTitulo(Livro *livros, int posicao){
 
 void listarTitulos(Livro *livros, int qtdTitulos, int posBusca){
     int i;
-    Livro *pLivro = &livros[posBusca];
+    Livro *pLivro = livros;
 
     if (posBusca != -1) {
+        pLivro += posBusca; //deslocar o ponteiro para a posição do livro encontrado
         printf("\n+----------------------------------------+");
         printf("\n|          DETALHES DO LIVRO             |");
         printf("\n+----------------------------------------+");
@@ -134,31 +133,32 @@ void listarTitulos(Livro *livros, int qtdTitulos, int posBusca){
         printf("\n==========================================");
         printf("\n          CATALOGO DE LIVROS              ");
         printf("\n==========================================");
-        for (i = 0; i < qtdTitulos; i++)
-        {
+        for (i = 0; i < qtdTitulos; i++){
 
             printf("\n+----------------------------------------+");
-            printf("\n| Codigo   : %-27d |", (livros + i)->codigo);
-            if ((livros + i)->estoque >= 1)
-                printf("\n| Status   : Disponivel (%d em estoque)  |", (livros + i)->estoque);
+            printf("\n| Codigo   : %-27d |", pLivro->codigo);
+            if (pLivro->estoque >= 1)
+                printf("\n| Status   : Disponivel (%d em estoque)  |", pLivro->estoque);
             else
-                printf("\nTitulo indisponivel - Estoque: %d", (livros + i)->estoque);
+                printf("\nTitulo indisponivel - Estoque: %d", pLivro->estoque);
 
-            printf("\n| Descricao: %-27s |", (livros + i)->descricao);
+            printf("\n| Descricao: %-27s |", pLivro->descricao);
             printf("\n+----------------------------------------+");
+            pLivro++;
         }
     }
 
 }
 
-
 int buscarTitulo(Livro *livros, int qtdTitulos, int codigoBuscado){
     int posBusca = -1, i;
+    Livro *pLivro = livros;
 
     for (i = 0; i < qtdTitulos; i++) {
-        if (codigoBuscado == (livros + i)->codigo) {
+        if (codigoBuscado == pLivro->codigo) {
             posBusca = i;
         }
+        pLivro++;
     }
 
     if (posBusca == -1) {
@@ -168,6 +168,134 @@ int buscarTitulo(Livro *livros, int qtdTitulos, int codigoBuscado){
         return posBusca;
     }
 }
+
+//funções do usuários
+void cadastrarUser(Usuario *pUser, Usuario *pUserInicio, int posicao){
+    int caractere, i, j;
+
+    pUser->codigoLivroEmprestado = -1;
+
+    int apenas_numeros = 1;
+    int busca_repeticao = -1;  
+
+    do{
+        printf("\nDigite o codigo do novo usuário: ");
+        if (scanf("%d", &pUser->codigo) == 1 && pUser->codigo > 0) {
+            apenas_numeros = 0;
+            while (getchar() != '\n'); 
+            break;
+        } else{
+            printf("Codigo invalido! Digite apenas numeros positivos.\n");
+            apenas_numeros = 1;
+            while (getchar() != '\n'); 
+        }
+    }while (apenas_numeros == 1 || pUser->codigo <= 0);
+
+    
+    if (posicao != 0) {
+        //printf("\nverifica repeticao\n");
+
+        busca_repeticao = buscarTitulo(pUserInicio, posicao, pUser->codigo);
+        if (busca_repeticao != -1) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");    
+
+        while (busca_repeticao != -1){
+            do{
+                printf("\nDigite o codigo do novo usuario: ");
+
+                if (scanf("%d", &pUser->codigo) == 1 && pUser->codigo > 0) {
+                    apenas_numeros = 0;
+                    while (getchar() != '\n'); 
+                    break;
+                    
+                } else{
+                    printf("Codigo invalido! Digite apenas numeros positivos.\n");
+                    apenas_numeros = 1;
+                    while (getchar() != '\n'); 
+                }
+            }while (pUser->codigo <= 0 || apenas_numeros == 1);
+            
+            busca_repeticao = buscarTitulo(pUserInicio, posicao, pUser->codigo);
+            if (busca_repeticao != -1) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");       
+            
+        } ;
+    }
+
+    while ((caractere = getchar()) != '\n' && caractere != EOF);
+
+    printf("\nComplete os seguintes campos, separando-os por (;) correspondentes aos dados do usuario: %d\n", pUser->codigo);
+    printf("nome: \nidade: \nCPF: \ngenero: \n");
+
+    printf("Dados do usuario%d: ", i);
+    fgets(pUser->dados, TAM_TEXTO, stdin);
+
+    if (pUser->dados[0] == '\n' || pUser->dados[0] == '\0'){
+        do{
+            printf("Sem informacoes.\n");
+            printf("\nPreencha os dados do usuario: ");
+            fgets(pUser->dados, TAM_TEXTO, stdin);
+        } while  (pUser->dados[0] == '\n' || pUser->dados[0] == '\0');
+    }       
+    
+}
+
+int buscarUsuario(Usuario *usuarios, int qtdUsuarios, int codigoBuscado){
+    
+    int posBusca = -1, i;
+    Usuario *pUsuario = usuarios; 
+
+    for (i = 0; i < qtdUsuarios; i++) {
+        if (codigoBuscado == pUsuario->codigo) {
+            posBusca = i;
+        }
+        pUsuario++;
+    }
+
+    if (posBusca == -1) {
+        //printf("\nNao possuimos este titulo no nosso acervo!");
+        return posBusca;
+    } else {
+        return posBusca;
+    }
+}
+
+void listarUsuario(Usuario *usuarios, int qtdUsuarios, int posBusca){
+    int i;
+    Usuario *pUsuario = usuarios;
+
+    if (posBusca != -1) {
+        pUsuario += posBusca; //deslocar o ponteiro para a posição do usuário encontrado
+        printf("\n+----------------------------------------+");
+        printf("\n|          DETALHES DO USUARIO           |");
+        printf("\n+----------------------------------------+");
+
+        printf("\n| Codigo   : %-27d |", pUsuario->codigo);
+        printf("\n| Informações     : %-27s |", pUsuario->dados);
+        printf("\n| Livro(s) emprestado(s): %-27s |", pUsuario->codigoLivroEmprestado == -1 ? "Nenhum" : "Possui livro(s) emprestado(s)");
+        printf("\n+----------------------------------------+\n");
+    }
+    else
+    {
+        printf("\n==========================================");
+        printf("\n          CATALOGO DE LIVROS              ");
+        printf("\n==========================================");
+        for (i = 0; i < qtdUsuarios; i++){
+
+            printf("\n+----------------------------------------+");
+            printf("\n| Codigo   : %-27d |", pUsuario->codigo);
+            if (pUsuario->estoque >= 1)
+                printf("\n| Status   : Disponivel (%d em estoque)  |", pUsuario->estoque);
+            else
+                printf("\nTitulo indisponivel - Estoque: %d", pUsuario->estoque);
+
+            printf("\n| Descricao: %-27s |", pUsuario->descricao);
+            printf("\n+----------------------------------------+");
+            pUsuario++;
+        }
+    }
+
+}
+
+
 
 
 int menu (){
@@ -203,24 +331,27 @@ int main(){
     int qtdTitulos = MAX_TITULOS;
     int codBusca;
     int posBusca;
+
     Livro livros[MAX_TITULOS];
     Livro *pLivros = NULL;
 
+    Usuario users[MAX_USERS];
+    Usuario *pUsers = NULL;
 
-    //Usuario user[MAX_USERS];
     int contadorUsers = 0;
     int contadorLivros = 0, opcao;
 
-    //int *p = NULL;
 
     pLivros = &livros[0];
+    pUsers = &users[0];
     do {
         opcao = menu();
         if(opcao == 1){
             if (contadorLivros < qtdTitulos) {
-                cadastrarTitulo(pLivros, contadorLivros);
+                cadastrarTitulo(pLivros + contadorLivros, pLivros, contadorLivros);
                 contadorLivros++;
-                pLivros++;
+            } else {
+                printf("\nNao e possivel cadastrar mais titulos. Limite atingido.\n");
             }
 
         } else if(opcao == 2){
@@ -236,7 +367,7 @@ int main(){
             int apenas_numeros = 1;
 
             for (int i = 0; i < contadorLivros; i++) {
-                printf("Codigo do livro %d: %d\n", i, (pLivros + i)->codigo);
+                printf("Codigo do livro %d: %d\n", i, pLivros[i].codigo);
             }
             do {
                 
@@ -261,11 +392,21 @@ int main(){
                 
             
             listarTitulos(livros, contadorLivros, posBusca);
+        } else if(opcao == 4){
+            if (contadorUsers < qtdTitulos) {
+                cadastrarTitulo(pUsers + contadorUsers, pUsers, contadorUsers);
+                contadorUsers++;
+            } else {
+                printf("\nNao e possivel cadastrar mais titulos. Limite atingido.\n");
+            }
         }
     
 
+        // printf("\n==========================================");
+        // printf("\n        contadorLivros: %d", contadorLivros);
+        // printf("\n==========================================");
         printf("\n==========================================");
-        printf("\n        contadorLivros: %d", contadorLivros);
+        printf("\n        contadorUsers: %d", contadorUsers);
         printf("\n==========================================");
 
 
