@@ -1,0 +1,12 @@
+Se você tivesse que continuar o desenvolvimento do projeto, qual seria a Versão 7?
+• Qual novo problema essa versão resolveria;
+    R: Repetição de códigos,  e maior especificidade para cada funcionalidade
+
+• Qual funcionalidade seria acrescentada;
+    R: montagem de cabeçalho, verificação de carácter, emprestar mais de um livro
+
+• Qual novo conteúdo da linguagem C seria necessário;
+    R: fila, pois emprestimos multiplos são uma sequência onde tem uma ordem de devolução baseado no FIFO
+
+• Como essa nova versão aproveitaria o programa já desenvolvido.
+    R: aproveitaria quase todas as funções, seria necessário alterar a struct para aceitar multiplos valores, e a função de realizar emprestimo
