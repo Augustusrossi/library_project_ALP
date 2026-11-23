@@ -1011,33 +1011,3 @@ int main(){
     
     return 0;
 }
-
-/*
-    preciso na hora de encerrar o empréstimo ou alterar o estoque de algum livro verificar quem é o próximo da fila e ver se o livro dele corresponde com o livro que foi alterado o estoque, nesse caso, se for o mesmo alterar o estoque para subtrair 1 pq o que estava na vila vai receber esse livro, e seguir com a lógica de realização de empréstimo 
-
-    - encerrar empréstimo
-    verifico se o livro que foi devolvido é o solicitado pelo primeiro da lista de espera
-    se for 
-        - eu chamo a função de remover da fila 
-        - eu chamo a função de emprestar passando o livro devolvido e o usuario da fila->inicio
-
-    se não 
-        - mantém o fluxo feito anteriormente
-
-    
-    - alterar o estoque
-    assim que algum estoque for alterado eu vejo se o estoque desse livro é > 0 e se o primeiro da fila quer ele
-    se for e tiver
-        - chamo a função de realizar emrpestimo, pegando o livro que foi alterado e o 1º user da fila
-        - chamo a função de remoção da fila.
-
-
-
-    Inconsistencias notadas:
-    - na devolução de estoque não está trocando o valor do campo codigoLivroEmprestado para -1 do usuário que foi devolver
-    - não consegui identificar o a listagem de fila de espera pq aparecia repitido apenas o início
-    - arrumar exibição do buscar livro 
-    - atualizar o prox da lista de espera para mostrar os que estão com livros pendentes
-    - exibição de listagem de informações
-
-*/
