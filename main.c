@@ -1,21 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
-#define MAX_TITULOS 3
-#define MAX_USERS 3
+//#define MAX_TITULOS 3
+//#define MAX_USERS 3
 #define TAM_TEXTO 120
 
-typedef struct{
-    int codigo;
-    char descricao[TAM_TEXTO];
-    int estoque;
-} Livro;
-
-typedef struct{
-    int codigo;
-    char dados[TAM_TEXTO];
-    int codigoLivroEmprestado;
-} Usuario;
+//declaração antecipada:
+typedef struct No_fila No_fila;
+typedef struct FilaEspera FilaEspera;
 
 typedef struct No_fila{
     int usuario;
@@ -28,23 +20,50 @@ typedef struct FilaEspera{
     No_fila *fim;
 }FilaEspera;
 
+typedef struct No_Livro{
+    int codigo;
+    char descricao[TAM_TEXTO];
+    int estoque;
+    struct No_Livro *prox;
+
+    FilaEspera *fila;
+} No_Livro;
+
+typedef struct No_user{
+    int codigo;
+    char dados[TAM_TEXTO];
+    int codigoLivroEmprestado;
+    struct No_user *prox;    
+} No_user;
+
+
+
+typedef struct No_historico {
+    char info[TAM_TEXTO];
+    struct No_historico *prox;
+} No_historico;
+
+
+
 //PROTÓRIPO DE FUNÇÕES
-void cadastrarTitulo(Livro *livros, Livro *inicioLivros, int posicao);
-void listarTitulos(Livro *livros, int qtdTitulos, int posBusca);
-int buscarTitulo(Livro *livros, int qtdTitulos, int codigoBuscado);
+No_Livro *cadastrarTitulo(No_Livro *inicioLivros);
+void listarTitulos(No_Livro *livros, No_Livro *livroEncontrado);
+No_Livro *buscarTitulo(No_Livro *inicioLivros, int codigoBuscado);
 int disponibilidadeTitulo(int qtdEstoque);
+void liberarLivros(No_Livro *inicio);
 
-void cadastrarUser(Usuario *usuarios, Usuario *inicioUsuarios, int posicao);
-void listarUsuario(Usuario *usuarios, int qtdUsuarios, int posBusca);
-int buscarUsuario(Usuario *usuarios, int qtdUsuarios, int codigoBuscado);
+No_user *cadastrarUser(No_user *userInicio);
+void listarUsuario(No_user *usuarios, No_user *userEncontrado);
+No_user *buscarUsuario(No_user *userInicio, int codigoBuscado);
+void liberarUsuarios(No_user *inicio);
 
-int registrarEmprestimo(Usuario *user, int codigoLivro, Livro *livro);
-int encerrarEmprestimos(Usuario *user, Livro *livro);
-int listarEmprestimos(Usuario *user, Livro *livro);
+int registrarEmprestimo(No_user *user, int codigoLivro, No_Livro *livro);
+int encerrarEmprestimos(No_user *user, No_Livro *livro);
+int listarEmprestimos(No_user *user, No_Livro *livro);
 
 FilaEspera *criar_fila(void);
 int fila_vazia(FilaEspera *fila);
-int entrarNaFilaDeEspera(Usuario *user, Livro *livro, FilaEspera *fila);
+int entrarNaFilaDeEspera(No_user *user, No_Livro *livro, FilaEspera *fila);
 int adicionarFilaDeEspera(int userCodigo, int livroCodigo, FilaEspera *fila);
 void retirarDaFila(FilaEspera *fila);
 int mostrarFilaEspera(FilaEspera *fila, int quantidade);
@@ -57,14 +76,22 @@ int disponibilidadeTitulo(int qtdEstoque){
         return 0;
 }
 
-void cadastrarTitulo(Livro *pLivro, Livro *inicioLivros, int posicao){
+No_Livro *cadastrarTitulo(No_Livro *inicioLivros){
+
+    No_Livro *novoLivro = malloc(sizeof(No_Livro));
+
+    if (novoLivro == NULL) {
+        printf("Erro ao alocar memoria!\n");
+        return inicioLivros;
+    }
+
 
     int apenas_numeros = 1;
-    int busca_repeticao = -1;  
+    No_Livro *busca_repeticao = NULL;  
 
     do{
         printf("\nDigite o codigo do novo livro: ");
-        if (scanf("%d", &pLivro->codigo) == 1 && pLivro->codigo > 0) {
+        if (scanf("%d", &novoLivro->codigo) == 1 && novoLivro->codigo > 0) {
             apenas_numeros = 0;
             while (getchar() != '\n'); 
             break;
@@ -73,40 +100,40 @@ void cadastrarTitulo(Livro *pLivro, Livro *inicioLivros, int posicao){
             apenas_numeros = 1;
             while (getchar() != '\n'); 
         }
-    }while (apenas_numeros == 1 || pLivro->codigo <= 0);
+    }while (apenas_numeros == 1 || novoLivro->codigo <= 0);
         
 
-    if (posicao != 0) {
+    
 
-        busca_repeticao = buscarTitulo(inicioLivros, posicao, pLivro->codigo);
-        if (busca_repeticao != -1) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");    
+    busca_repeticao = buscarTitulo(inicioLivros, novoLivro->codigo); //fazer o buscar
+    if (busca_repeticao != NULL) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");    
 
-        while (busca_repeticao != -1){
-            do{
-                printf("\nDigite o codigo do novo livro: ");
+    while (busca_repeticao != NULL){
+        do{
+            printf("\nDigite o codigo do novo livro: ");
 
-                if (scanf("%d", &pLivro->codigo) == 1 && pLivro->codigo > 0) {
-                    apenas_numeros = 0;
-                    while (getchar() != '\n'); 
-                    break;
-                    
-                } else{
-                    printf("Codigo invalido! Digite apenas numeros positivos.\n");
-                    apenas_numeros = 1;
-                    while (getchar() != '\n'); 
-                }
-            }while (pLivro->codigo <= 0 || apenas_numeros == 1);
-            
-            busca_repeticao = buscarTitulo(inicioLivros, posicao, pLivro->codigo);
-            if (busca_repeticao != -1) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");       
-            
-        } ;
-    }
+            if (scanf("%d", &novoLivro->codigo) == 1 && novoLivro->codigo > 0) {
+                apenas_numeros = 0;
+                while (getchar() != '\n'); 
+                break;
+                
+            } else{
+                printf("Codigo invalido! Digite apenas numeros positivos.\n");
+                apenas_numeros = 1;
+                while (getchar() != '\n'); 
+            }
+        }while (novoLivro->codigo <= 0 || apenas_numeros == 1);
+        
+        busca_repeticao = buscarTitulo(inicioLivros, novoLivro->codigo);
+        if (busca_repeticao != NULL) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");       
+        
+    } ;
+
 
     do{
         //verifica se o estoque tem letra
         printf("\nDigite a quantidade de exemplares em estoque: ");
-        if (scanf("%d", &pLivro->estoque) == 1 && pLivro->estoque >= 0) {
+        if (scanf("%d", &novoLivro->estoque) == 1 && novoLivro->estoque >= 0) {
             apenas_numeros = 0;
             while (getchar() != '\n'); 
             break;
@@ -115,111 +142,126 @@ void cadastrarTitulo(Livro *pLivro, Livro *inicioLivros, int posicao){
             apenas_numeros = 1;
             while (getchar() != '\n'); 
         }
-    }while (apenas_numeros == 1 || pLivro->estoque < 0);
+    }while (apenas_numeros == 1 || novoLivro->estoque < 0);
 
 
-    printf("\nComplete os seguintes campos, separando-os por (;) correspondentes a obra: %d\n", pLivro->codigo);
+    printf("\nComplete os seguintes campos, separando-os por (;) correspondentes a obra: %d\n", novoLivro->codigo);
     printf("nome: \nautor: \nano: \ngenero: \n");
 
     printf("descricao: ");
-    fgets(pLivro->descricao, TAM_TEXTO, stdin);
+    fgets(novoLivro->descricao, TAM_TEXTO, stdin);
     int i = 0;
-    while (pLivro->descricao[i] != '\0' && pLivro->descricao[i] != '\n') {
+    while (novoLivro->descricao[i] != '\0' && novoLivro->descricao[i] != '\n') {
         i++;
     }
-    pLivro->descricao[i] = '\0';
+    novoLivro->descricao[i] = '\0';
 
-    if (pLivro->descricao[0] == '\n' || pLivro->descricao[0] == '\0'){
+    if (novoLivro->descricao[0] == '\n' || novoLivro->descricao[0] == '\0'){
         do{
             printf("Sem descricao.\n");
             printf("\nDigite algo na descricao: ");
-            fgets(pLivro->descricao, TAM_TEXTO, stdin);
+            fgets(novoLivro->descricao, TAM_TEXTO, stdin);
                 int i = 0;
-                while (pLivro->descricao[i] != '\0' && pLivro->descricao[i] != '\n') {
+                while (novoLivro->descricao[i] != '\0' && novoLivro->descricao[i] != '\n') {
                     i++;
                 }
-                pLivro->descricao[i] = '\0';
-        } while (pLivro->descricao[0] == '\n' || pLivro->descricao[0] == '\0');
+                novoLivro->descricao[i] = '\0';
+        } while (novoLivro->descricao[0] == '\n' || novoLivro->descricao[0] == '\0');
     }
+
+    novoLivro->fila = criar_fila();
+    
+
+    if (novoLivro->fila == NULL) {
+        printf("Erro ao criar fila de espera!\n");
+        free(novoLivro);
+        return inicioLivros;
+    }
+    novoLivro->prox = inicioLivros;
+    return novoLivro;
 }
 
-void listarTitulos(Livro *livros, int qtdTitulos, int posBusca){
-    int i;
-    Livro *pLivro = livros;
+void listarTitulos(No_Livro *inicioLivros, No_Livro *livroEncontrado){
+    No_Livro *livroAtual = inicioLivros;
+    int contLivros = 0;
 
-    if (posBusca != -1) {
-        if (posBusca < 0 || posBusca >= qtdTitulos) {
-            printf("\nTitulo nao encontrado.\n");
-            return;
-        }
+    if (livroAtual == NULL) {
+        printf("Lista vazia!\n");
+        return;
+    }
 
-        pLivro += posBusca; //deslocar o ponteiro para a posição do livro encontrado
+    if (livroEncontrado != NULL) {
+
         printf("\n+------------------------------------------------------------+\n");
         printf("|                    DETALHES DO LIVRO                       |\n");
         printf("+------------------------------------------------------------+\n");
 
-        printf("| Codigo: %-49d |\n", pLivro->codigo);
-        printf("| Estoque: %-48d |\n", pLivro->estoque);
+        printf("| Codigo: %-49d |\n", livroEncontrado->codigo);
+        printf("| Estoque: %-48d |\n", livroEncontrado->estoque);
 
-        if (pLivro->estoque >= 1)
+        if (livroEncontrado->estoque >= 1)
             printf("| Status: %-49s |\n", "Disponivel");
         else
             printf("| Status: %-49s |\n", "Indisponivel");
 
-        printf("| Descricao: %-46.46s |\n", pLivro->descricao);
+        printf("| Descricao: %-46.46s |\n", livroEncontrado->descricao);
         printf("+------------------------------------------------------------+\n");
     }
-    else
-    {
+    else {
         printf("\n");
         printf("+------------------------------------------------------------+\n");
         printf("|                    CATALOGO DE LIVROS                      |\n");
         printf("+------------------------------------------------------------+\n");
-        for (i = 0; i < qtdTitulos; i++){
+        while (livroAtual != NULL) {
 
-            printf("| LIVRO: %-51d |\n", i + 1);
+            printf("| LIVRO: %-51d |\n", contLivros + 1);
             printf("+------------------------------------------------------------+\n");
-            printf("| Codigo: %-49d |\n", pLivro->codigo);
-            printf("| Estoque: %-48d |\n", pLivro->estoque);
+            printf("| Codigo: %-49d |\n", livroAtual->codigo);
+            printf("| Estoque: %-48d |\n", livroAtual->estoque);
 
-            if (pLivro->estoque >= 1)
+            if (livroAtual->estoque >= 1)
                 printf("| Status: %-49s |\n", "Disponivel");
             else
                 printf("| Status: %-49s |\n", "Indisponivel");
 
-            printf("| Descricao: %-46.46s |\n", pLivro->descricao);
+            printf("| Descricao: %-46.46s |\n", livroAtual->descricao);
             printf("+------------------------------------------------------------+\n");
 
-            pLivro++;
+            contLivros++;
+            livroAtual = livroAtual->prox;
         }
-        printf("\nTotal de titulos cadastrados: %d\n", qtdTitulos);
+        printf("\nTotal de titulos cadastrados: %d\n", contLivros);
     }
 
 }
 
-int buscarTitulo(Livro *livros, int qtdTitulos, int codigoBuscado){
-    int posBusca = -1, i;
-    Livro *pLivro = livros;
+No_Livro *buscarTitulo(No_Livro *inicioLivros, int codigoBuscado){
 
-    for (i = 0; i < qtdTitulos; i++) {
-        if (codigoBuscado == pLivro->codigo) {
-            posBusca = i;
+    No_Livro *livroAtual = inicioLivros;
+
+    while (livroAtual != NULL){
+        if(livroAtual->codigo == codigoBuscado){
+            return livroAtual;
         }
-        pLivro++;
-    }
 
-    if (posBusca == -1) {
-        return posBusca;
-    } else {
-        return posBusca;
+        livroAtual = livroAtual->prox;
     }
+    return NULL;
 }
 
-void alterarEstoque( Livro *livro, int valor){
+int alterarEstoque(No_Livro *livro, int valor){
+    if (livro == NULL || valor < 0) {
+        return 0;
+    }
+
     livro->estoque = valor;
+    return 1;
 }
 
-int verificarEstoqueVazio(Livro *livro, int posbusca){
+int verificarEstoqueVazio(No_Livro *livro){
+    if (livro == NULL) {
+        return 0;
+    }
     //pegar um livro que deseja ser buscado e verificar o estoque desse livro todas as vezes que houver alteração nele
     if (livro->estoque == 0){
         printf("Estoque vazio para o livro: %d", livro->codigo);
@@ -232,18 +274,46 @@ int verificarEstoqueVazio(Livro *livro, int posbusca){
 
 }
 
-//funções do usuários
-void cadastrarUser(Usuario *pUser, Usuario *pUserInicio, int posicao){
-    int caractere;
+int contar(No_Livro *inicio) {
+    int quantidade = 0;
+    No_Livro *atual = inicio;
+    while (atual != NULL) {
+        quantidade++;
+        atual = atual->prox;
+    }
+    return quantidade;
+}
 
-    pUser->codigoLivroEmprestado = -1;
+void liberarLivros(No_Livro *inicioLivro){
+    No_Livro *atual = inicioLivro;
+    No_Livro *proximo;
+    while (atual != NULL) {
+    // Salva o proximo antes de liberar.
+        proximo = atual->prox;
+        liberar_fila(atual->fila);
+        free(atual);
+        atual = proximo;
+    }
+}
+
+//funções do usuários
+No_user *cadastrarUser(No_user *userInicio){
+    No_user *novoUser = malloc(sizeof(No_user));
+
+    if (novoUser == NULL) {
+        printf("Erro ao alocar memoria!\n");
+        return userInicio;
+    }
+
+
+    novoUser->codigoLivroEmprestado = -1;
 
     int apenas_numeros = 1;
-    int busca_repeticao = -1;  
+    No_user *busca_repeticao = NULL;
 
     do{
         printf("\nDigite o codigo do novo usuário: ");
-        if (scanf("%d", &pUser->codigo) == 1 && pUser->codigo > 0) {
+        if (scanf("%d", &novoUser->codigo) == 1 && novoUser->codigo > 0) {
             apenas_numeros = 0;
             while (getchar() != '\n'); 
             break;
@@ -252,90 +322,93 @@ void cadastrarUser(Usuario *pUser, Usuario *pUserInicio, int posicao){
             apenas_numeros = 1;
             while (getchar() != '\n'); 
         }
-    }while (apenas_numeros == 1 || pUser->codigo <= 0);
+    }while (apenas_numeros == 1 || novoUser->codigo <= 0);
 
     
-    if (posicao != 0) {
+    
+    
+    busca_repeticao = buscarUsuario(userInicio, novoUser->codigo);
+    if (busca_repeticao != NULL) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");    
 
-        busca_repeticao = buscarUsuario(pUserInicio, posicao, pUser->codigo);
-        if (busca_repeticao != -1) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");    
+    while (busca_repeticao != NULL){
+        do{
+            printf("\nDigite o codigo do novo usuario: ");
 
-        while (busca_repeticao != -1){
-            do{
-                printf("\nDigite o codigo do novo usuario: ");
+            if (scanf("%d", &novoUser->codigo) == 1 && novoUser->codigo > 0) {
+                apenas_numeros = 0;
+                while (getchar() != '\n'); 
+                break;
+                
+            } else{
+                printf("Codigo invalido! Digite apenas numeros positivos.\n");
+                apenas_numeros = 1;
+                while (getchar() != '\n'); 
+            }
+        }while (novoUser->codigo <= 0 || apenas_numeros == 1);
+        
+        busca_repeticao = buscarUsuario(userInicio, novoUser->codigo);
+        if (busca_repeticao != NULL) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");       
+        
+    } ;
+    
 
-                if (scanf("%d", &pUser->codigo) == 1 && pUser->codigo > 0) {
-                    apenas_numeros = 0;
-                    while (getchar() != '\n'); 
-                    break;
-                    
-                } else{
-                    printf("Codigo invalido! Digite apenas numeros positivos.\n");
-                    apenas_numeros = 1;
-                    while (getchar() != '\n'); 
-                }
-            }while (pUser->codigo <= 0 || apenas_numeros == 1);
-            
-            busca_repeticao = buscarUsuario(pUserInicio, posicao, pUser->codigo);
-            if (busca_repeticao != -1) printf("Codigo invalido. Digite um valor diferente de um codigo ja inserido anteriormente.\n");       
-            
-        } ;
-    }
-
-    printf("\nComplete os seguintes campos, separando-os por (;) correspondentes aos dados do usuario: %d\n", pUser->codigo);
+    printf("\nComplete os seguintes campos, separando-os por (;) correspondentes aos dados do usuario: %d\n", novoUser->codigo);
     printf("nome: \nidade: \nCPF: \ngenero: \n");
 
     printf("Dados do usuario: ");
-    fgets(pUser->dados, TAM_TEXTO, stdin);
+    fgets(novoUser->dados, TAM_TEXTO, stdin);
     int i = 0;
-    while (pUser->dados[i] != '\0' && pUser->dados[i] != '\n') {
+    while (novoUser->dados[i] != '\0' && novoUser->dados[i] != '\n') {
         i++;
     }
-    pUser->dados[i] = '\0';
+    novoUser->dados[i] = '\0';
 
-    if (pUser->dados[0] == '\n' || pUser->dados[0] == '\0'){
+    if (novoUser->dados[0] == '\n' || novoUser->dados[0] == '\0'){
         do{
             printf("Sem informacoes.\n");
             printf("\nPreencha os dados do usuario: ");
-            fgets(pUser->dados, TAM_TEXTO, stdin);
-        } while  (pUser->dados[0] == '\n' || pUser->dados[0] == '\0');
+            fgets(novoUser->dados, TAM_TEXTO, stdin);
+        } while  (novoUser->dados[0] == '\n' || novoUser->dados[0] == '\0');
     }       
     
+    novoUser->prox = userInicio;
+    return novoUser;
 }
 
-int buscarUsuario(Usuario *usuarios, int qtdUsuarios, int codigoBuscado){
+No_user *buscarUsuario(No_user *userInicio, int codigoBuscado){
     
-    int posBusca = -1, i;
-    Usuario *pUsuario = usuarios; 
+    No_user *userAtual = userInicio;
 
-    for (i = 0; i < qtdUsuarios; i++) {
-        if (codigoBuscado == pUsuario->codigo) {
-            posBusca = i;
+    while (userAtual != NULL){
+        if(userAtual->codigo == codigoBuscado){
+            return userAtual;
         }
-        pUsuario++;
-    }
 
-    if (posBusca == -1) {
-        return posBusca;
-    } else {
-        return posBusca;
+        userAtual = userAtual->prox;
     }
+    return NULL;
 }
 
-void listarUsuario(Usuario *usuarios, int qtdUsuarios, int posBusca){
-    int i;
-    Usuario *pUsuario = usuarios;
+void listarUsuario(No_user *inicioUser, No_user *userEncontrado){
+    
+    No_user *userAtual = inicioUser;
+    int contUsers = 0;
 
-    if (posBusca != -1) {
-        pUsuario += posBusca; //deslocar o ponteiro para a posição do usuário encontrado
+    if (userAtual == NULL) {
+        printf("Lista vazia!\n");
+        return;
+    }
+
+    if (userEncontrado != NULL) {
+        userAtual = userEncontrado; //deslocar o ponteiro para a posição do usuário encontrado
         printf("\n+------------------------------------------------------------+\n");
         printf("|                   DETALHES DO USUARIO                      |\n");
         printf("+------------------------------------------------------------+\n");
-        printf("| Codigo: %-49d |\n", pUsuario->codigo);
-        printf("| Dados: %-51.51s |\n", pUsuario->dados);
-        if (pUsuario->codigoLivroEmprestado != -1) {
+        printf("| Codigo: %-49d |\n", userAtual->codigo);
+        printf("| Dados: %-51.51s |\n", userAtual->dados);
+        if (userAtual->codigoLivroEmprestado != -1) {
             printf("| Livro emprestado: %-40d |\n",
-                pUsuario->codigoLivroEmprestado);
+                userAtual->codigoLivroEmprestado);
         } else {
             printf("| Livro emprestado: %-40s |\n", "Nenhum");
         }
@@ -346,30 +419,51 @@ void listarUsuario(Usuario *usuarios, int qtdUsuarios, int posBusca){
         printf("+------------------------------------------------------------+\n");
         printf("|                    USUARIOS CADASTRADOS                    |\n");
         printf("+------------------------------------------------------------+\n");
-        for (i = 0; i < qtdUsuarios; i++){
+        while (userAtual != NULL) {
 
-            printf("| USUARIO: %-49d |\n", i + 1);
+            printf("| USUARIO: %-49d |\n", contUsers + 1);
             printf("+------------------------------------------------------------+\n");
-            printf("| Codigo: %-50d |\n", pUsuario->codigo);
-            printf("| Dados: %-51.51s |\n", pUsuario->dados);
+            printf("| Codigo: %-50d |\n", userAtual->codigo);
+            printf("| Dados: %-51.51s |\n", userAtual->dados);
 
-            if (pUsuario->codigoLivroEmprestado != -1) {
+            if (userAtual->codigoLivroEmprestado != -1) {
                 printf("| Livro emprestado: %-40d |\n",
-                    pUsuario->codigoLivroEmprestado);
+                    userAtual->codigoLivroEmprestado);
             } else {
                 printf("| Livro emprestado: %-40s |\n", "Nenhum");
             }
 
             printf("+------------------------------------------------------------+\n");
-            pUsuario++;
+            contUsers++;
+            userAtual = userAtual->prox;
         }
-        printf("\nTotal de usuarios cadastrados: %d\n", qtdUsuarios);
+        printf("\nTotal de usuarios cadastrados: %d\n", contUsers);
     }
 
 }
 
+void liberarUsuarios(No_user *inicioUser){
+    No_user *atual = inicioUser;
+    No_user *proximo;
+    while (atual != NULL) { 
+    // Salva o proximo antes de liberar.
+        proximo = atual->prox;
+        free(atual);
+        atual = proximo;
+    }
+}
+
 //funções de emprestimo
-int registrarEmprestimo( Usuario *user, int codigoLivro, Livro *livro){
+int registrarEmprestimo( No_user *user, int codigoLivro, No_Livro *livro){
+
+    if (user == NULL || livro == NULL) {
+        return 0;
+    }
+
+    if (livro->codigo != codigoLivro) {
+        return 0;
+    }
+
     if (user->codigoLivroEmprestado != -1) {
         printf("\nUsuario ja possui um livro emprestado.\n");
         return 0;
@@ -383,8 +477,16 @@ int registrarEmprestimo( Usuario *user, int codigoLivro, Livro *livro){
     return 1;
 }
 
-int encerrarEmprestimos( Usuario *user, Livro *livro){
+int encerrarEmprestimos( No_user *user, No_Livro *livro){
+    if (user == NULL || livro == NULL) {
+        return 0;
+    }
+
     if (user->codigoLivroEmprestado == -1) {
+        return 0;
+    }
+
+    if (user->codigoLivroEmprestado != livro->codigo) {
         return 0;
     }
 
@@ -395,21 +497,39 @@ int encerrarEmprestimos( Usuario *user, Livro *livro){
     
 }
 
-int listarEmprestimos(Usuario *user, Livro *livro){
-    Livro *pLivro = livro;
-    Usuario *pUser = user;
+int listarEmprestimos(No_user *inicioUsuarios, No_Livro *inicioLivros){
 
-    for (int i = 0; i < MAX_USERS; i++){
-        if (pUser->codigoLivroEmprestado != -1){
-            buscarUsuario(user, MAX_USERS, pUser->codigo);
-            buscarTitulo(livro, MAX_TITULOS, pUser->codigoLivroEmprestado);       
+    No_user *userAtual = inicioUsuarios;
+    No_Livro *livroEncontrado;
+    int quantidade = 0;
+
+    while (userAtual != NULL) {
+        if (userAtual->codigoLivroEmprestado != -1){
+            livroEncontrado = buscarTitulo(inicioLivros, userAtual->codigoLivroEmprestado);
+            if (livroEncontrado != NULL) {
+                printf("\nUsuario: %d\n", userAtual->codigo);
+                printf("Dados: %s\n", userAtual->dados);
+                printf("Livro: %d\n", livroEncontrado->codigo);
+                printf("Descricao: %s\n", livroEncontrado->descricao);
+
+                quantidade++;
+            }
         }
-        pUser++;
+        userAtual = userAtual->prox;
     }
+    if (quantidade == 0) {
+        printf("\nNenhum emprestimo registrado.\n");
+    }
+    return quantidade;
 }
 
 FilaEspera *criar_fila(){
     FilaEspera *fila = (FilaEspera*) malloc (sizeof(FilaEspera));
+
+    if (fila == NULL) {
+        return 0;
+    }
+
     fila->inicio = NULL;
     fila->fim = NULL;
 
@@ -417,10 +537,14 @@ FilaEspera *criar_fila(){
 }
 
 int fila_vazia(FilaEspera *fila){
-    return (fila->inicio == NULL);
+    return (fila == NULL || fila->inicio == NULL);
 }
 
-int entrarNaFilaDeEspera(Usuario *user, Livro *livro, FilaEspera *fila){
+int entrarNaFilaDeEspera(No_user *user, No_Livro *livro, FilaEspera *fila){
+    if (user == NULL || livro == NULL || fila == NULL) {
+        return 0;
+    }
+
     printf("\nO livro %d nao possui estoque disponivel no momento.\n", livro->codigo);
     int opcao;
     do{
@@ -432,11 +556,10 @@ int entrarNaFilaDeEspera(Usuario *user, Livro *livro, FilaEspera *fila){
             
             if (opcao == 0) {
                 return 0;
-            } else if (opcao == 1) {
-                
-                adicionarFilaDeEspera(user->codigo, livro->codigo, fila);
-                return 1;
-            }
+            } 
+
+            return adicionarFilaDeEspera(user->codigo, livro->codigo, fila);
+
 
         } else{
             printf("Opcao invalida! Digite apenas 1 para Sim ou 0 para Nao.\n");
@@ -448,12 +571,31 @@ int entrarNaFilaDeEspera(Usuario *user, Livro *livro, FilaEspera *fila){
 }
 
 int adicionarFilaDeEspera(int userCodigo, int livroCodigo, FilaEspera *fila){
-    printf("\nUsuario %d adicionado a fila de espera para o livro %d.\n", userCodigo, livroCodigo);
+
+    if (fila == NULL) {
+        return 0;
+    }
+
+    //verificar se o user já esta na fila do livro em especifico
+    No_fila *atual = fila->inicio;
+
+    while (atual != NULL) {
+        if (atual->usuario == userCodigo) {
+            printf("Usuario ja esta na fila de espera.\n");
+            return 0;
+        }
+
+        atual = atual->prox;
+    }
+
 
     No_fila *novoNo = (No_fila*) malloc(sizeof(No_fila));
-    if (novoNo == NULL)
-        exit(1);
-    else {
+
+
+    if (novoNo == NULL) {
+        printf("Erro ao alocar memoria!\n");
+        return 0;
+    }else {
         novoNo->usuario = userCodigo;
         novoNo->livro = livroCodigo;
         novoNo->prox = NULL;
@@ -463,13 +605,15 @@ int adicionarFilaDeEspera(int userCodigo, int livroCodigo, FilaEspera *fila){
             fila->fim->prox = novoNo;
         }
         fila->fim = novoNo;
+        
+        printf("\nUsuario %d adicionado a fila de espera para o livro %d.\n", userCodigo, livroCodigo);
     }
 
     return 1;
 }
 
 void retirarDaFila(FilaEspera *fila) {
-    if (fila->inicio == NULL) {
+    if (fila == NULL || fila->inicio == NULL) {
         printf("Fila vazia!\n");
         return;
     }
@@ -488,27 +632,31 @@ void retirarDaFila(FilaEspera *fila) {
 }
 
 int mostrarFilaEspera(FilaEspera *fila, int quantidade){
+    if (fila_vazia(fila)) {
+        return 0;
+    }
+
     No_fila *auxAtual = fila->inicio;
     int cont = 0;
 
-    if(fila_vazia(fila)) {
-        return 0;
+    while (auxAtual != NULL && (quantidade == -1 || cont < quantidade)){
+        printf(" user: %7d | Livro: %5d\n", auxAtual->usuario, auxAtual->livro);
+        auxAtual = auxAtual->prox;
+        cont++;
     }
-    else{
-
-        //printf("          |           ");
-        while (auxAtual != NULL && (quantidade == -1 || cont < quantidade)){
-            printf(" user: %7d | Livro: %5d\n", auxAtual->usuario, auxAtual->livro);
-            auxAtual = auxAtual->prox;
-            cont++;
-        }
-        return 1;
-    }
+    return 1;
 }
+
 
 //libera todos os elementos da fila
 void liberar_fila(FilaEspera *fila){
-    No_fila *p, *q = fila->inicio;
+    if (fila == NULL) {
+        return;
+    }
+
+    No_fila *p;
+    No_fila *q = fila->inicio;
+
     while (q != NULL){
         p = q->prox;
         free(q);
@@ -517,10 +665,78 @@ void liberar_fila(FilaEspera *fila){
     free(fila);
 }
 
+//histórico de ações
+No_historico *empilhar(No_historico *topo, char *info){
+    No_historico *novo = malloc(sizeof(No_historico));
 
+    if (novo == NULL) {
+        printf("Erro ao alocar memoria!\n");
+        return topo;
+    }
+    
+    int i = 0;
 
+    while (info[i] != '\0' && i < TAM_TEXTO - 1) {
+        novo->info[i] = info[i];
+        i++;
+    }
+
+    novo->info[i] = '\0';
+    novo->prox = topo;
+
+    topo = novo;
+    //printf("func %d visitada!\n", func);
+    return topo;
+}
+
+No_historico *desempilhar(No_historico *topo) {
+    //pilha vazia
+    if (topo == NULL) {
+        printf("Historico vazio!\n");
+        return topo;
+    }
+    // endereco q sera removido.
+    No_historico *remover = topo;
+    printf("Saindo da pagina %s\n", topo->info);
+    // O segundo -> novo topo.
+    topo = topo->prox;
+
+    free(remover);
+    if (topo != NULL) {
+        printf("Pagina atual: %s\n", topo->info);
+    } else {
+        printf("Nao ha paginas anteriores.\n");
+    }
+    return topo;
+}
+
+void exibirHistorico(No_historico *topo) {
+    No_historico *atual = topo;
+    if (atual == NULL) {
+        printf("Historico vazio!\n");
+        return;
+    }
+    printf("\nHistorico de navegacao:\n");
+    while (atual != NULL) {
+        printf("Pagina %s\n", atual->info);
+        // Avanca para o proximo no.
+        atual = atual->prox;
+    }
+}
+
+void liberarPilha(No_historico *topo) {
+    No_historico *atual = topo;
+    No_historico *proximo;
+    while (atual != NULL) {
+    // Salva o proximo antes de liberar.
+        proximo = atual->prox;
+        free(atual);
+        atual = proximo;
+    }
+}
 
 int menu (){
+    //No_historico *topo = NULL;
     int opcao;
     printf("\n");
     printf("+---------------------------------------------------------+\n");
@@ -536,6 +752,8 @@ int menu (){
     printf("|  8 - Registrar emprestimo                               |\n");
     printf("|  9 - Encerrar emprestimo                                |\n");
     printf("|  10 - Consultar fila de espera                          |\n");
+    printf("|  11 - Exibir historico de operacoes                     |\n");
+    printf("|  12 - Consultar a situacao dos emprestimos              |\n");
     printf("|  0 - Sair do programa                                   |\n");
     printf("+---------------------------------------------------------+\n");
 
@@ -554,52 +772,65 @@ int menu (){
 
 int main(){
 
-    int qtdTitulos = MAX_TITULOS;
     int codBusca;
     
 
-    Livro livros[MAX_TITULOS];
-    Livro *pLivros = NULL;
+    //No_Livro livros[MAX_TITULOS];
+    No_Livro *pLivros = NULL;
+    No_Livro *inicioLivros = NULL;
+    
+    No_historico *topo = NULL;
 
-    Usuario users[MAX_USERS];
-    Usuario *pUsers = NULL;
+    //No_user inicioUsers[MAX_USERS];
+    No_user *pUsers = NULL;
+    No_user *inicioUsers = NULL;
 
     int contadorUsers = 0;
     int contadorLivros = 0, opcao;
 
-    FilaEspera *fila = criar_fila();
-
-
-    pLivros = &livros[0];
-    pUsers = &users[0];
+    //pLivros = &livros[0];
+    //pUsers = &inicioUsers[0];
     do {
         opcao = menu();
+
         if(opcao == 1){
-            if (contadorLivros < qtdTitulos) {
-                cadastrarTitulo(pLivros + contadorLivros, pLivros, contadorLivros);
+            No_Livro *inicioAnterior = inicioLivros;
+            inicioLivros = cadastrarTitulo(inicioLivros);
+
+            if (inicioLivros != inicioAnterior) {
                 contadorLivros++;
-            } else {
-                printf("\nNao e possivel cadastrar mais titulos. Limite atingido.\n");
+                topo = empilhar(topo, "Cadastro de Livros - 1");
             }
+            
 
         } else if(opcao == 2){
             if(contadorLivros == 0){
                 printf("\nNao ha titulos cadastrados no momento.\n");
             } else {
-                listarTitulos(livros, contadorLivros, -1);
+                listarTitulos(inicioLivros, NULL);
             }
 
 
         } else if(opcao == 3){
             int apenas_numeros = 1;
-            int posBusca;
+            
+            No_Livro *livroEncontrado;
 
             printf("\n============================================\n");
             printf("              BUSCA DE TITULOS              \n");
             printf("============================================\n");
-            for (int i = 0; i < contadorLivros; i++) {
-                printf(" [%d] Codigo do livro: %d\n", i, (pLivros + i)->codigo);
+            
+            No_Livro *livroAtual = inicioLivros;
+            while (livroAtual != NULL) {
+                printf("Codigo: %d\n", livroAtual->codigo);
+                livroAtual = livroAtual->prox;
             }
+
+            if (inicioLivros == NULL) {
+                printf("Nao ha livros cadastrados.\n");
+                continue;
+            }
+
             printf("--------------------------------------------\n");
             do {
                 
@@ -607,11 +838,11 @@ int main(){
                 if (scanf("%d", &codBusca) == 1 && codBusca > 0) {
                     apenas_numeros = 0;
                     while (getchar() != '\n'); 
-                    posBusca = buscarTitulo(livros, contadorLivros, codBusca);
-                    if (posBusca == -1) {
+                    livroEncontrado  = buscarTitulo(inicioLivros, codBusca);
+                    if (livroEncontrado == NULL) {
                         printf("Titulo nao encontrado.\n");
                     } else {
-                        printf("Titulo encontrado na posicao: %d\n", posBusca);
+                        printf("Titulo encontrado : %d\n", livroEncontrado->codigo);
                         break;
                     }
                     
@@ -620,33 +851,43 @@ int main(){
                     apenas_numeros = 1;
                     while (getchar() != '\n'); 
                 }
-            }while (codBusca <= 0 || apenas_numeros == 1 || posBusca == -1);
-                
+            }while (codBusca <= 0 || apenas_numeros == 1);
             
-            listarTitulos(livros, contadorLivros, posBusca);
+            listarTitulos(inicioLivros, livroEncontrado);
         } else if(opcao == 4){
-            if (contadorUsers < MAX_USERS) {
-                cadastrarUser(pUsers + contadorUsers, pUsers, contadorUsers);
+            No_user *inicioAnterior = inicioUsers;
+
+            inicioUsers = cadastrarUser(inicioUsers);
+            if (inicioUsers != inicioAnterior) {
                 contadorUsers++;
-            } else {
-                printf("\nNao e possivel cadastrar mais usuarios. Limite atingido.\n");
+                topo = empilhar(topo, "Cadastro de Usuarios - 4");
             }
+            
         } else if(opcao == 5){
             if(contadorUsers == 0){
                 printf("\nNao ha usuarios cadastrados no momento.\n");
             } else {
-                listarUsuario(users, contadorUsers, -1);
+                listarUsuario(inicioUsers, NULL);
             }
         
         } else if(opcao == 6){
-            int posBusca;
+
+            if (inicioUsers == NULL) {
+                printf("\nNao ha usuarios cadastrados.\n");
+                continue;
+            }
+                    
             int apenas_numeros = 1;
+            No_user *userEncontrado;
             
             printf("\n============================================\n");
             printf("              BUSCA DE USUARIOS             \n");
             printf("============================================\n");
-            for (int i = 0; i < contadorUsers; i++) {
-                printf(" [%d] Codigo do usuario: %d\n", i, (pUsers+ i)->codigo);
+            No_user *userAtual = inicioUsers;
+
+            while (userAtual != NULL) {
+                printf("Codigo: %d\n", userAtual->codigo);
+                userAtual = userAtual->prox;
             }
             printf("--------------------------------------------\n");
             do {
@@ -655,12 +896,11 @@ int main(){
                 if (scanf("%d", &codBusca) == 1 && codBusca > 0) {
                     apenas_numeros = 0;
                     while (getchar() != '\n'); 
-                    posBusca = buscarUsuario(users, contadorUsers, codBusca);
-                    if (posBusca == -1) {
+                    userEncontrado = buscarUsuario(inicioUsers, codBusca);
+                    if (userEncontrado == NULL) {
                         printf("Usuario nao encontrado.\n");
                     } else {
-                        printf("Usuario encontrado na posicao: %d\n", posBusca);
-                        break;
+                        printf("Usuario encontrado com o codigo: %d\n", userEncontrado->codigo);
                     }
                     
                 } else{
@@ -668,10 +908,9 @@ int main(){
                     apenas_numeros = 1;
                     while (getchar() != '\n'); 
                 }
-            }while (codBusca <= 0 || apenas_numeros == 1 || posBusca == -1);
-                
+            }while (apenas_numeros == 1 || userEncontrado == NULL);
             
-            listarUsuario(users, contadorUsers, posBusca);
+            listarUsuario(inicioUsers, userEncontrado);
         } else if(opcao == 7){
             
             if (contadorLivros == 0) {
@@ -680,12 +919,20 @@ int main(){
             }
             
             // Alterar estoque de titulo
-            int apenas_numeros = 1, posBusca, novoEstoque, codBusca, posBuscaUser, emprestimo;
+            int apenas_numeros = 1, novoEstoque;
+            No_Livro *livroAtual = inicioLivros;
+            No_Livro *livroEncontrado;
+            No_user *userEncontrado;
+
             printf("\n============================================\n");
             printf("              ALTERAR ESTOQUE               \n");
             printf("============================================\n");
-            for (int i = 0; i < contadorLivros; i++) {
-                printf(" [%d] Codigo do livro: %d\n", i, (pLivros + i)->codigo);
+            
+
+
+            while (livroAtual != NULL) {
+                printf("Codigo: %d | Estoque: %d\n", livroAtual->codigo,livroAtual->estoque);
+                livroAtual = livroAtual->prox;
             }
             printf("--------------------------------------------\n");
             do {
@@ -694,75 +941,72 @@ int main(){
                 if (scanf("%d", &codBusca) == 1 && codBusca > 0) {
                     apenas_numeros = 0;
                     while (getchar() != '\n'); 
-                    posBusca = buscarTitulo(livros, contadorLivros, codBusca);
-                    if (posBusca == -1) {
-                        printf("Titulo nao encontrado.\n");
-                    } else {
-                        printf("Titulo encontrado na posicao: %d\n", posBusca);
-                        break;
-                    }
+                    livroEncontrado = buscarTitulo(inicioLivros, codBusca);
                     
+                    if (livroEncontrado == NULL) printf("Titulo nao encontrado.\n");
+                                        
                 } else{
                     printf("Codigo invalido! Digite apenas numeros positivos.\n");
                     apenas_numeros = 1;
                     while (getchar() != '\n'); 
                 }
-            }while (codBusca <= 0 || apenas_numeros == 1 || posBusca == -1);
+            }while (apenas_numeros == 1 || livroEncontrado == NULL);
             
             do {
                 
                 printf("Digite o valor do novo estoque para o livro: ");
-                if (scanf("%d", &novoEstoque) == 1 && codBusca > 0) {
+                if (scanf("%d", &novoEstoque) == 1 && novoEstoque >= 0) {
                     apenas_numeros = 0;
                     while (getchar() != '\n'); 
-                    alterarEstoque(&livros[posBusca], novoEstoque);
-                    if (posBusca == -1) {
-                        printf("Erro ao alterar estoque.\n");
-                    } else {
-                        printf("Estoque alterado com sucesso.\n");
-                        break;
-                    }
-                    
                 } else{
                     printf("Quantidade invalida! Digite apenas numeros positivos.\n");
                     apenas_numeros = 1;
                     while (getchar() != '\n'); 
                 }
-            }while (codBusca <= 0 || apenas_numeros == 1 || posBusca == -1);
+            }while (apenas_numeros == 1 || livroEncontrado == NULL);
 
-            printf("--------------------------------------------\n");
-            printf("        ALTERACAO FEITA COM SUCESSO         \n");
-            printf("--------------------------------------------\n");
+            if(alterarEstoque(livroEncontrado, novoEstoque)){
+                topo = empilhar(topo, "Alterar estoque - 7");
+                printf("--------------------------------------------\n");
+                printf("        ALTERACAO FEITA COM SUCESSO         \n");
+                printf("--------------------------------------------\n");
+
+            } else {
+                printf("\nErro ao alterar estoque.\n");
+            }
 
             //verificar o próximo da lista
-            if (!fila_vazia(fila)){            
+            if (!fila_vazia(livroEncontrado->fila)){            
 
-                if(fila->inicio->livro == codBusca){
+                if(livroEncontrado->fila->inicio->livro == codBusca){
 
-                    int posBuscaUser = buscarUsuario(users, 1, fila->inicio->usuario);
+                    userEncontrado = buscarUsuario(inicioUsers, livroEncontrado->fila->inicio->usuario);
 
-                    emprestimo = registrarEmprestimo(&users[posBuscaUser], codBusca, &livros[posBusca]);
+                    int emprestimo = registrarEmprestimo(inicioUsers, codBusca, inicioLivros);
 
                     if(emprestimo == 0) printf("| -- Emprestimo invalido, titulo sem estoque ou usuario selecionado com devolucao pendente -- |\n");
 
                     else {
                         printf("| -- Emprestimo valido, deu bom -- |\n");
-                        printf("Emprestimo realizado para o usuario %d.\n", users[posBuscaUser].codigo);
-                        retirarDaFila(fila);
+                        printf("Emprestimo realizado para o usuario %d.\n", inicioUsers->codigo);
+                        retirarDaFila(livroEncontrado->fila);
                     }
 
                 } else{
-                    printf("| -- usuario: %d quer o livro: %d e não o livro: %d -- |", fila->inicio->usuario, fila->inicio->livro);
+                    printf("| -- usuario: %d quer o livro: %d e não o livro: %d -- |", livroEncontrado->fila->inicio->usuario, livroEncontrado->fila->inicio->livro);
                 }
             }
 
         } else if(opcao == 8){
             // Registrar emprestimo
-            int apenas_numeros = 1, emprestimo, entrarEspera;
-            int posBuscaUser, posBuscaLivro;
-            //verifica código do usuário
+            int apenas_numeros = 1, emprestimo, entrarEspera, usuariosDisponiveis = 0;
+            int posBuscaUser;
+            No_user *userEncontrado = NULL;
+            No_user *userAtual = inicioUsers;
+            No_Livro *livroEncontrado = NULL;
+            No_Livro *livroAtual;
 
-            if (contadorUsers == 0 || contadorLivros == 0) {
+            if (inicioLivros == NULL || inicioUsers == NULL) {
                 printf("\nCadastre pelo menos um usuario e um livro antes de registrar emprestimos.\n");
                 continue;
             }
@@ -775,33 +1019,15 @@ int main(){
                 // Sub-bloco usuário
                 printf("--- SELECIONE O USUARIO ---\n");
                 
-                int usuariosDisponiveis = 0;
-                No_fila *auxFila;
+                while (userAtual != NULL) {
 
-                for (int i = 0; i < contadorUsers; i++) {
+                    if (userAtual->codigoLivroEmprestado == -1) {
 
-                    if ((pUsers + i)->codigoLivroEmprestado == -1) {
-
-                        int usuarioNaFila = 0;
-                        auxFila = fila->inicio;
-
-                        // Verifica se o usuario ja esta na fila de espera
-                        while (auxFila != NULL) {
-                            if (auxFila->usuario == (pUsers + i)->codigo) {
-                                usuarioNaFila = 1;
-                                break;
-                            }
-
-                            auxFila = auxFila->prox;
-                        }
-
-                        if (!usuarioNaFila) {
-                            printf(" [%d] Codigo do usuario: %d\n",
-                                i, (pUsers + i)->codigo);
-
-                            usuariosDisponiveis++;
-                        }
+                        printf("Codigo do usuario: %d\n", userAtual->codigo);
+                        usuariosDisponiveis++;
                     }
+
+                    userAtual = userAtual->prox;
                 }
 
                 printf("--------------------------------------------\n");
@@ -817,36 +1043,15 @@ int main(){
                     if (scanf("%d", &codBusca) == 1 && codBusca > 0) {
                         apenas_numeros = 0;
                         while (getchar() != '\n'); 
-                        posBuscaUser = buscarUsuario(users, contadorUsers, codBusca); 
+                        userEncontrado = buscarUsuario(inicioUsers, codBusca);
 
-                        if (posBuscaUser == -1) {
+                        if (userEncontrado == NULL) {
                             printf("Usuario nao encontrado.\n");
-                        } else {
-                            printf("Usuario encontrado na posicao: %d\n", posBuscaUser);
-
-                            //ponteiro para usuario encontrado
-                            Usuario *userEncontrado = &users[posBuscaUser];
-
-                            if (userEncontrado->codigoLivroEmprestado != -1) {
-                                printf("Usuario ja possui um livro emprestado.\n");
-                                posBuscaUser = -1;
-                            } else {
-                                auxFila = fila->inicio;
-
-                                while (auxFila != NULL) {
-                                    if (auxFila->usuario == userEncontrado->codigo) {
-                                        printf("Usuario ja existe na fila de espera.\n");
-                                        posBuscaUser = -1;
-                                        break;
-                                    }
-
-                                    auxFila = auxFila->prox;
-                                }
-                            }                     
-                        }
-                            
-                        
-                    } else{
+                        }else if (userEncontrado->codigoLivroEmprestado != -1) {
+                            printf("Usuario ja possui um livro emprestado.\n");
+                            userEncontrado = NULL;
+                        }                  
+                    }else{
                         printf("Codigo invalido! Digite apenas numeros positivos.\n");
                         apenas_numeros = 1;
                         while (getchar() != '\n'); 
@@ -855,8 +1060,11 @@ int main(){
                 
     
                 printf("\n--- SELECIONE O LIVRO ---\n");
-                for (int i = 0; i < contadorLivros; i++) {
-                    printf(" [%d] Codigo do livro: %d\n", i, (pLivros + i)->codigo);
+                livroAtual = inicioLivros;
+
+                while (livroAtual != NULL) {
+                    printf("Codigo: %d | Estoque: %d\n", livroAtual->codigo, livroAtual->estoque);
+                    livroAtual = livroAtual->prox;
                 }
                 printf("--------------------------------------------\n");
     
@@ -868,8 +1076,8 @@ int main(){
                         apenas_numeros = 0;
                         while (getchar() != '\n'); 
 
-                        posBuscaLivro = buscarTitulo(livros, contadorLivros, codBusca);
-                        if (posBuscaLivro == -1) {
+                        livroEncontrado = buscarTitulo(inicioLivros, codBusca);
+                        if (livroEncontrado == NULL) {
                             printf("Titulo nao encontrado.\n");
                         } 
                         
@@ -878,21 +1086,25 @@ int main(){
                         apenas_numeros = 1;
                         while (getchar() != '\n'); 
                     }
-                }while (codBusca <= 0 || apenas_numeros == 1 || posBuscaLivro == -1);
+                }while (codBusca <= 0 || apenas_numeros == 1 || livroEncontrado == NULL);
                 
-                emprestimo = registrarEmprestimo(&users[posBuscaUser], codBusca, &livros[posBuscaLivro]); 
+                if (!fila_vazia(livroEncontrado->fila)) {
+
+                    printf("\nJa existem usuarios aguardando este livro.\n");
+
+                    entrarNaFilaDeEspera(userEncontrado, livroEncontrado, livroEncontrado->fila);
+                }else if (disponibilidadeTitulo(livroEncontrado->estoque)){
+
+                    emprestimo = registrarEmprestimo(userEncontrado, livroEncontrado->codigo, livroEncontrado); 
                 
-                if(emprestimo == 0){
-                    printf("\n| -- Titulo sem estoque ou usuario selecionado com devolucao pendente -- |");
-
-                    entrarEspera = entrarNaFilaDeEspera(&users[posBuscaUser], &livros[posBuscaLivro], fila);
-                    
-                    if(entrarEspera == 0 ) printf("| -- Erro ao adicionar usuario na fila de espera -- |");
-                    
-                    break;
-
-                } else {
-                    printf("\nEmprestimo realizado com sucesso.\n");
+                    if(emprestimo == 0){
+                        printf("\n| -- Titulo sem estoque ou usuario selecionado com devolucao pendente -- |");
+                    } else {
+                        printf("\nEmprestimo realizado com sucesso.\n");
+                        topo = empilhar(topo, "Emprestimo de Livros - 8");
+                    }
+                } else{
+                    entrarNaFilaDeEspera(userEncontrado, livroEncontrado, livroEncontrado->fila);
                 }
                 
             }while(emprestimo == 0);
@@ -900,107 +1112,201 @@ int main(){
 
         } else if(opcao == 9){
             // Encerrar emprestimo
-            int apenas_numeros = 1, devolucao;
-            int posBuscaUser, posBuscaLivro;
+            int apenas_numeros = 1, devolucao, possuiEmprestimos = 0, atenderFila;
+            No_user *userEscolhido;
+            No_Livro *livroEncontrado;
+            No_user *proximoUser = NULL;
+            No_user *userAtual = inicioUsers;
 
             if (contadorUsers == 0) {
                 printf("\nNao ha usuarios cadastrados.\n");
                 continue;
             }
 
-            do{
-                printf("\n============================================\n");
-                printf("           ENCERRAR EMPRESTIMO              \n");
-                printf("============================================\n");
-                
-                // Sub-bloco usuário
-                printf("--- SELECIONE O USUARIO ---\n");
-                for (int i = 0; i < contadorUsers; i++) {
-                    printf(" [%d] Codigo do usuario: %d\n", i, (pUsers + i)->codigo);
+            // emprestimos ativos.
+            while (userAtual != NULL) {
+                if (userAtual->codigoLivroEmprestado != -1) {
+                    possuiEmprestimos = 1;
+                    break;
                 }
-                printf("--------------------------------------------\n");
-    
-                do {
-                    
-                    printf("Digite o codigo do usuario que deseja devolver um livro: ");
-                    if (scanf("%d", &codBusca) == 1 && codBusca > 0) {
-                        apenas_numeros = 0;
-                        while (getchar() != '\n'); 
+                userAtual = userAtual->prox;
+            }
 
-                        posBuscaUser = buscarUsuario(users, contadorUsers, codBusca);
-
-                        if (posBuscaUser == -1) {
-                            printf("Usuario nao encontrado.\n");
-                        } else {
-                            
-                            printf("Usuario encontrado na posicao: %d\n", posBuscaUser);
-                            break;
-                        }
-                        
-                    } else{
-                        printf("Codigo invalido! Digite apenas numeros positivos.\n");
-                        apenas_numeros = 1;
-                        while (getchar() != '\n'); 
-                    }
-                }while (codBusca <= 0 || apenas_numeros == 1 || posBuscaUser == -1);
-
-                //ponteiro para usuario escolhido
-                Usuario *userEscolhido = &users[posBuscaUser];
-
-                posBuscaLivro = buscarTitulo(livros, contadorLivros, userEscolhido->codigoLivroEmprestado);
-                if (posBuscaLivro == -1) {
-                    printf("Titulo nao encontrado.\n");
-                } else {
-                    printf("Titulo encontrado na posicao: %d\n", posBuscaLivro);
-                    
-                    devolucao = encerrarEmprestimos(&users[posBuscaUser], &livros[posBuscaLivro]);
-                    
-                    if (devolucao == 0 ) printf("| -- Usuario selecionado não tem nenhum titulo associado a ele -- |");
-                }
-    
-                
-                
-            }while(devolucao == 0);
+            printf("\n============================================\n");
+            printf("           ENCERRAR EMPRESTIMO              \n");
+            printf("============================================\n");
             
+
+            printf("--- USUARIOS COM EMPRESTIMOS ATIVOS ---\n");
+            userAtual = inicioUsers;
+
+            while (userAtual != NULL) {
+                if (userAtual->codigoLivroEmprestado != -1) {
+                    printf("Usuario: %d | Livro emprestado: %d\n", userAtual->codigo,userAtual->codigoLivroEmprestado);
+                }
+                userAtual = userAtual->prox;
+            }
+            
+            printf("--------------------------------------------\n");
+
+            do {
+                    
+                printf("Digite o codigo do usuario que deseja devolver um livro: ");
+                if (scanf("%d", &codBusca) == 1 && codBusca > 0) {
+                    apenas_numeros = 0;
+                    while (getchar() != '\n'); 
+
+                    userEscolhido = buscarUsuario(inicioUsers, codBusca);
+
+                    if (userEscolhido == NULL) {
+                        printf("Usuario nao encontrado.\n");
+                    } else if (userEscolhido->codigoLivroEmprestado == -1) {
+                        
+                        printf("Usuario encontrado : %d\n", userEscolhido->codigo);
+                        break;
+                    }
+                    
+                } else{
+                    printf("Codigo invalido! Digite apenas numeros positivos.\n");
+                    apenas_numeros = 1;
+                    while (getchar() != '\n'); 
+                }
+            }while (apenas_numeros == 1 || userEscolhido == NULL);
+
+            livroEncontrado = buscarTitulo(inicioLivros, userEscolhido->codigoLivroEmprestado);
+            if (livroEncontrado == NULL) {
+                printf("Titulo nao encontrado.\n");
+                continue;
+            } 
+
+            printf("\nUsuario selecionado: %d\n", userEscolhido->codigo);
+            printf("Titulo encontrado: %d\n", livroEncontrado->codigo);
+            
+            devolucao = encerrarEmprestimos(userEscolhido, livroEncontrado);
+            
+            if (devolucao == 0 ) {
+                printf("| -- Usuario selecionado não tem nenhum titulo associado a ele -- |");
+                continue;
+            }
+    
+            topo = empilhar(topo, "Devolucao de Livros - 9");;
+
+            //verificar o próximo da lista
+            if (!fila_vazia(livroEncontrado->fila)) {
+
+                printf("\nProximo usuario da fila: %d\n", livroEncontrado->fila->inicio->usuario);
+
+                proximoUser = buscarUsuario(inicioUsers, livroEncontrado->fila->inicio->usuario);
+
+                if(livroEncontrado->fila->inicio->livro != livroEncontrado->codigo){
+                    printf("usuario da fila esta associado a outro livro.\n");
+                    printf("| -- usuario: %d quer o livro: %d e não o livro: %d -- |", livroEncontrado->fila->inicio->usuario, livroEncontrado->fila->inicio->livro);
+                } else if (proximoUser == NULL) {
+                    printf("Usuario nao encontrado no cadastro.\n");
+                } else if (proximoUser->codigoLivroEmprestado != -1) {
+                    printf("usuario ja possui um emprestimo ativo.\n");
+                }else{
+
+                    do {
+                        printf("\nDeseja efetivar o emprestimo para o proximo usuario? (1 - Sim / 0 - Nao): ");
+                    
+                        if (scanf("%d", &atenderFila) == 1 && (atenderFila == 1 || atenderFila == 0)) {
+                            while (getchar() != '\n');
+                            break;
+                        } else {
+                            printf("Opcao invalida! Digite 1 ou 0: ");
+                            while (getchar() != '\n');
+                        }
+                    } while ((atenderFila != 1 || atenderFila != 0));
+
+                    if (atenderFila == 1) {
+
+                        int emprestimo = registrarEmprestimo(proximoUser,livroEncontrado->codigo, livroEncontrado);
+
+                        if (emprestimo == 1) {
+                            printf("\nEmprestimo realizado para o usuario %d.\n",proximoUser->codigo);
+                            retirarDaFila(livroEncontrado->fila);
+                            topo = empilhar(topo, "Emprestimo de Livros - 8");
+                        } else {
+                            printf("\nNao foi possivel efetivar o emprestimo.\n");
+                            printf("O usuario ta na fila de espera.\n");
+                        }
+
+                    } else {
+                        printf("\nO usuario ta na fila de espera.\n");
+                    }
+                }
+
+            } else {
+
+                printf("\nNao ha usuarios esperando este livro.\n");
+            }
+
             printf("--------------------------------------------\n");
             printf("        Devolucao feita com sucesso         \n");
             printf("--------------------------------------------\n");
-
-            //verificar o próximo da lista
-            int emprestimo;
-            if (!fila_vazia(fila)) {
-
-                if(fila->inicio->livro == codBusca){
-                    emprestimo = registrarEmprestimo(&users[posBuscaUser], fila->inicio->livro, &livros[posBuscaLivro]);
-                    
-                    if(emprestimo == 0) printf("| -- Emprestimo invalido, titulo sem estoque ou usuario selecionado com devolucao pendente -- |");
-                    else {
-                        printf("| -- Emprestimo valido, deu bom -- |");
-                        printf("Livro emprestado ao proximo usuario da fila: %d.\n", users[posBuscaUser].codigo);
-                        retirarDaFila(fila);
-                    }
-
-                } else{
-                    printf("| -- usuario: %d quer o livro: %d e não o livro: %d -- |", fila->inicio->usuario, fila->inicio->livro);
-                }
-            }
-            
 
         } else if(opcao == 10){
             printf("\n============================================\n");
             printf("        FILA DE ESPERA PARA EMPRESTIMO        \n");
             printf("============================================\n");
+            
+
+            int apenas_numeros = 1, filaEspera;
+            No_Livro *livroEncontrado = NULL;
+            No_Livro *livroAtual = inicioLivros;
+
+            if (inicioLivros == NULL) {
+                printf("\nNao ha livros cadastrados.\n");
+                continue;
+            }
+
+            printf("--- LIVROS CADASTRADOS ---\n");
+            while (livroAtual != NULL) {
+                printf("Codigo: %d | %s\n", livroAtual->codigo, livroAtual->descricao);
+                livroAtual = livroAtual->prox;
+            }
+
+            printf("--------------------------------------------\n");
+
+            do{
+                printf("Digite o codigo do livro para consultar a fila: ");
+                if (scanf("%d", &codBusca) == 1 && codBusca > 0) {
+                    apenas_numeros = 0;
+                    while (getchar() != '\n');
+                    livroEncontrado = buscarTitulo(inicioLivros, codBusca);
+
+                    if (livroEncontrado == NULL) {
+                        printf("Titulo nao encontrado.\n");
+                    }
+                } else {
+                    printf("Codigo invalido! Digite apenas numeros positivos.\n");
+                    apenas_numeros = 1;
+                    while (getchar() != '\n');
+                }
+            } while (apenas_numeros == 1 || livroEncontrado == NULL);
+                
+            printf("\n---  Fila de espera do livro: %d ---\n", livroEncontrado->codigo);
+
             printf("+--------------------------------+\n");
             printf("| Usuario       | Livro          |\n");
             printf("+--------------------------------+\n");
 
-            int filaEspera = mostrarFilaEspera(fila, -1);
+            filaEspera = mostrarFilaEspera(livroEncontrado->fila, -1);
+
             if (filaEspera == 0){
                 printf("\n| --         FILA DE ESPERA ESTA VAZIA        -- |\n");
                 printf("| -- Nao ha nenhum usuario na lista de espera -- |\n");
             } 
             
-            
+        } else if(opcao == 11){    
+            exibirHistorico(topo);
+        }else if (opcao == 12) {
+            if (inicioUsers == NULL) {
+                printf("\nNao ha usuarios cadastrados.\n");
+                continue;
+            }
+            listarEmprestimos(inicioUsers, inicioLivros);    
         } else if(opcao == 0){
             printf("\nSaindo do programa...\n");
         } else {
@@ -1008,36 +1314,9 @@ int main(){
         }
 
     }while(opcao != 0);
+    liberarLivros(inicioLivros);
+    liberarUsuarios(inicioUsers);
+    liberarPilha(topo);
     
     return 0;
 }
-
-/*
-    preciso na hora de encerrar o empréstimo ou alterar o estoque de algum livro verificar quem é o próximo da fila e ver se o livro dele corresponde com o livro que foi alterado o estoque, nesse caso, se for o mesmo alterar o estoque para subtrair 1 pq o que estava na vila vai receber esse livro, e seguir com a lógica de realização de empréstimo 
-
-    - encerrar empréstimo
-    verifico se o livro que foi devolvido é o solicitado pelo primeiro da lista de espera
-    se for 
-        - eu chamo a função de remover da fila 
-        - eu chamo a função de emprestar passando o livro devolvido e o usuario da fila->inicio
-
-    se não 
-        - mantém o fluxo feito anteriormente
-
-    
-    - alterar o estoque
-    assim que algum estoque for alterado eu vejo se o estoque desse livro é > 0 e se o primeiro da fila quer ele
-    se for e tiver
-        - chamo a função de realizar emrpestimo, pegando o livro que foi alterado e o 1º user da fila
-        - chamo a função de remoção da fila.
-
-
-
-    Inconsistencias notadas:
-    - na devolução de estoque não está trocando o valor do campo codigoLivroEmprestado para -1 do usuário que foi devolver
-    - não consegui identificar o a listagem de fila de espera pq aparecia repitido apenas o início
-    - arrumar exibição do buscar livro 
-    - atualizar o prox da lista de espera para mostrar os que estão com livros pendentes
-    - exibição de listagem de informações
-
-*/
